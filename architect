@@ -1,0 +1,24 @@
+framework
+    -user
+        -participant
+        -researcher
+        -signin
+        -signout
+    -project
+        -research
+        -appointment
+        -questionnaire
+        -history
+        -flow
+        -schedule
+    -file
+        -avatar
+        -document
+    -statistic
+    -balance
+
+    -email
+    -message
+    
+    -logger
+    -security
