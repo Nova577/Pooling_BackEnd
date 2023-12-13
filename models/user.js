@@ -1,8 +1,4 @@
-import {DataTypes} from 'sequelize'
-import DataFactory from '../dataFactory'
-
-const dataFactory = DataFactory.getInstance()
-const mysql = dataFactory.getDatabase('mysql')
+import { DataTypes, Model } from 'sequelize'
 
 const userSchema = {
     id : {
@@ -66,7 +62,7 @@ const userSchema = {
     }
 }
 
-const participantInfoSchema = {
+const participantSchema = {
     id : {
         type : DataTypes.STRING,
         allowNull : false,
@@ -107,7 +103,7 @@ const participantInfoSchema = {
     }
 }
 
-const researcherInfoSchema = {
+const researcherSchema = {
     id : {
         type : DataTypes.STRING,
         allowNull : false,
@@ -148,12 +144,38 @@ const researcherInfoSchema = {
     }
 }
 
-const User = mysql.define('User', userSchema)
-const ParticipantInfo = mysql.define('ParticipantInfo', participantInfoSchema)
-const ResearcherInfo = mysql.define('ResearcherInfoSchema', researcherInfoSchema)
+class User extends Model {}
+class Participant extends Model {}
+class Researcher extends Model {}
+
+function init(mysql) {
+    User.init(
+        userSchema,
+        {
+            mysql,
+            modelName : 'Users'
+        }
+    )
+    Participant.init(
+        participantSchema,
+        {
+            mysql,
+            modelName : 'Participants'
+        }
+    )
+    Researcher.init(
+        researcherSchema,
+        {
+            mysql,
+            modelName : 'Researchers'
+        }
+    )
+}
+
 
 export default {
+    init,
     User,
-    ParticipantInfo,
-    ResearcherInfo
+    Participant,
+    Researcher
 }

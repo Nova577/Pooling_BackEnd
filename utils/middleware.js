@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken'
 import logger from './logger'
+import userService from '../services/userService'
 
 const requestLogger = (request, response, next) => {
+    logger.info('---')
     logger.info('Method:', request.method)
     logger.info('Status:', request.status)
     logger.info('Path:', request.path)
@@ -11,23 +13,24 @@ const requestLogger = (request, response, next) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-    logger.error(error.message)
 
     if (error.name === 'CastError') {
-        return response.status(400).send({ 
+        return response.status(400).send({
             error: 'malformatted id' 
         })
     } else if (error.name === 'ValidationError') {
         return response.status(400).json({ 
             error: error.message 
         })
-    } else if (error.name === 'JsonWebTokenError') {
+    } else if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
         return response.status(401).json({
-            error: 'invalid token'
+            code : 0,
+            error: error.message 
         })
-    } else if (error.name === 'TokenExpiredError') {
-        return response.status(401).json({
-            error: 'token expired'
+    } else if (error.name === 'PermissonDenied') {
+        return response.status(404).json({
+            code : 0,
+            error: error.message 
         })
     }
 
@@ -38,28 +41,40 @@ const tokenExtractor = (request, response, next) => {
     const authorization = request.get('authorization')
     if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
         Object.assign(request, {token: authorization.substring(7)})
-    }else{
-        return response.status(401).json({ 
-            error: 'token missing or invalid' 
+        next()
+    } else {
+        next({
+            name : 'JsonWebTokenError',
+            message : 'token missing or invalid'
         })
     }
-    next()
 }
 
 const userExtractor = async (request, response, next) => {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-        return response.status(401).json({ 
-            error: 'token missing or invalid' 
+    const decoded = jwt.verify(
+        request.token,
+        process.env.SECRET, 
+        error => {
+            if(error) {
+                next(error)
+            }
+        }
+    )
+    if(!userService.verifyUser(decoded)) {
+        next({
+            name : 'PermissionDenied',
+            message : 'invalid user.'
         })
+    } else {
+        next()
     }
-    //TODO:get user info from database
-    
-    next()
 }
 
 const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
+    response.status(404).send({ 
+        code : '0',
+        error: 'unknown endpoint' 
+    })
 }
 
 
