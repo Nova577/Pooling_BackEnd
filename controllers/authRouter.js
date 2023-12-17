@@ -1,5 +1,5 @@
 import express from 'express'
-import userService from '../services/userService'
+import userService from '../services/userService.js'
 
 const authRouter = express.Router()
 
@@ -34,10 +34,15 @@ authRouter.post('/refreshToken', ( request, response, next ) => {
     }
 },)
 
+authRouter.post('/logout', ( request, response ) => {
+    const { id } = request.body
+    userService.logout(id)
+    response
+        .status(200)
+        .send({ code : 0 , message : 'logout success.' })
+})
 
-export default {
-    authRouter
-}
+export default authRouter
 
 
 

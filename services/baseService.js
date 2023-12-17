@@ -24,4 +24,4 @@ class BaseService {
 
 }
 
-export default BaseService.getInstance()
+export default BaseService 

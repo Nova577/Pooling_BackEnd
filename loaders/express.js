@@ -1,9 +1,9 @@
 import express from 'express'
 import cors from 'cors'
-import config from '../utils/config'
-import logger from '../utils/logger'
-import middleware from '../utils/middleware'
-import { authRouter } from '../controllers/login'
+import config from '../utils/config.js'
+import logger from '../utils/logger.js'
+import middleware from '../utils/middleware.js'
+import authRouter from '../controllers/authRouter.js'
 
 export default (app) => {
     //init basic module

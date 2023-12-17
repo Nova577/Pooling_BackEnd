@@ -1,13 +1,13 @@
-import config from '../utils/config'
-import logger from '../utils/logger'
-import userInit from '../models/user'
-import DataService from '../services/dataService'
+import config from '../utils/config.js'
+import logger from '../utils/logger.js'
+import { userInit } from '../models/user.js'
+import DataService from '../services/dataService.js'
+
+const dataService = DataService.getInstance()
 
 export default async () => {
     //init dataService
-    const dataService = DataService.getInstance()
-    dataService.init(config.DATABASE)
-
+    await dataService.init(config.DATABASE)
     //init mysql
     const mysql = dataService.getDatabase('mysql')
     userInit(mysql)

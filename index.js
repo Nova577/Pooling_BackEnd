@@ -1,9 +1,9 @@
 import express from 'express'
 import http from 'http'
-import config from './utils/config'
-import logger from './utils/logger'
-import expressLoader from './loaders/express'
-import databaseLoader from './loaders/database'
+import config from './utils/config.js'
+import logger from './utils/logger.js'
+import expressLoader from './loaders/express.js'
+import databaseLoader from './loaders/database.js'
 
 async function startService() {
     const app = express()
@@ -16,7 +16,7 @@ async function startService() {
     try {
         await databaseLoader()
     }catch(error) {
-        logger.error('init database failed', error)
+        logger.error('init database failed:', error)
         return
     }
     

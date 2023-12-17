@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
-import logger from './logger'
-import userService from '../services/userService'
+import logger from './logger.js'
+import userService from '../services/userService.js'
 
 const requestLogger = (request, response, next) => {
     logger.info('---')
@@ -51,6 +51,7 @@ const tokenExtractor = (request, response, next) => {
 }
 
 const userExtractor = async (request, response, next) => {
+    //check if this token valid or expired
     const decoded = jwt.verify(
         request.token,
         process.env.SECRET, 
@@ -60,7 +61,8 @@ const userExtractor = async (request, response, next) => {
             }
         }
     )
-    if(!userService.verifyUser(decoded)) {
+    //check if this user still logged in
+    if(!userService.verifyUserAuth(decoded)) {
         next({
             name : 'PermissionDenied',
             message : 'invalid user.'
