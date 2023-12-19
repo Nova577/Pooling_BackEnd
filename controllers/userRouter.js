@@ -5,10 +5,10 @@ const userRouter = express.Router()
 
 userRouter.post('/participant', ( request, response ) => {
     const participantInfo = request.body
-    const user = userService.createParticipant(participantInfo)
+    userService.createParticipant(participantInfo)
     response
         .status(200)
-        .send({ code : 0 , data : { user } })
+        .send({ code : 0 , message : 'success' })
 })
 
 userRouter.get('/participant/:id', ( request, response ) => {
@@ -30,10 +30,10 @@ userRouter.put('/participant/:id', ( request, response ) => {
 
 userRouter.post('/researcher', ( request, response ) => {
     const { username, password } = request.body
-    const user = userService.createResearcher(username, password)
+    userService.createResearcher(username, password)
     response
         .status(200)
-        .send({ code : 0 , data : { user } })
+        .send({ code : 0 , message : 'success' })
 })
 
 userRouter.get('/researcher/:id', ( request, response ) => {

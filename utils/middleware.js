@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken'
+import { CustomError } from 'error.js'
 import logger from './logger.js'
+
 import userService from '../services/userService.js'
 
 const requestLogger = (request, response, next) => {
@@ -13,24 +15,21 @@ const requestLogger = (request, response, next) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-
-    if (error.name === 'CastError') {
+    logger.error(`${error.name}: ${error.message} \n ${error.stack}`)
+    if (error.name === 'ValidationError') {
         return response.status(400).send({
-            error: 'malformatted id' 
-        })
-    } else if (error.name === 'ValidationError') {
-        return response.status(400).json({ 
-            error: error.message 
+            code : '0',
+            message: 'Invalid input' 
         })
     } else if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
         return response.status(401).json({
             code : 0,
-            error: error.message 
+            message: error.message 
         })
     } else if (error.name === 'PermissonDenied') {
         return response.status(404).json({
             code : 0,
-            error: error.message 
+            message: error.message 
         })
     }
 
@@ -43,10 +42,8 @@ const tokenExtractor = (request, response, next) => {
         Object.assign(request, {token: authorization.substring(7)})
         next()
     } else {
-        next({
-            name : 'JsonWebTokenError',
-            message : 'token missing or invalid'
-        })
+        const error = new CustomError('JsonWebTokenError', 'invalid token.')
+        next(error)
     }
 }
 
@@ -61,15 +58,7 @@ const userExtractor = async (request, response, next) => {
             }
         }
     )
-    //check if this user still logged in
-    if(!userService.verifyUserAuth(decoded)) {
-        next({
-            name : 'PermissionDenied',
-            message : 'invalid user.'
-        })
-    } else {
-        next()
-    }
+    Object.assign(request, {user: decoded})
 }
 
 const unknownEndpoint = (request, response) => {

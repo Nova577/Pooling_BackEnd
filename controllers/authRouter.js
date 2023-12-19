@@ -3,40 +3,27 @@ import userService from '../services/userService.js'
 
 const authRouter = express.Router()
 
-authRouter.post('/login', ( request, response, next ) => {
+authRouter.post('/login', ( request, response ) => {
     const { username, password } = request.body
 
-    const token = userService.login(username, password)
-    if(!token) {
-        next({
-            name : 'JsonWebTokenError',
-            message : 'invalid username or password'
-        })
-    } else {
-        response
-            .status(200)
-            .send({ code : 0 , data : { token } })
-    }
+    const { id, type, token } = userService.login(username, password)
+
+    response
+        .status(200)
+        .send({ code : 0 , data : { id, type, token } })
 })
 
-authRouter.post('/refreshToken', ( request, response, next ) => {
-    const { id } = request.body
-    const token  = userService.refreshToken(id)
-    if(!token){
-        next({
-            name : 'JsonWebTokenError',
-            message : 'user has been logged out.'
-        })
-    } else {
-        response
-            .status(200)
-            .send({ code : 0 , data : { token } })
-    }
-},)
+
+authRouter.post('/refreshToken', ( request, response ) => {
+    const { longToken } = request.body
+    const token  = userService.refreshToken(request.shortToken, longToken)
+    response
+        .status(200)
+        .send({ code : 0 , data : { token } })
+})
 
 authRouter.post('/logout', ( request, response ) => {
-    const { id } = request.body
-    userService.logout(id)
+    userService.logout(request.shortToken)
     response
         .status(200)
         .send({ code : 0 , message : 'logout success.' })

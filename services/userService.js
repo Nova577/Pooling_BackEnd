@@ -1,14 +1,16 @@
+import _ from 'lodash'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import BaseService from './baseService.js'
 import logger from '../utils/logger.js'
+import { HttpError } from '../utils/error.js'
 import { User, Participant, Researcher } from '../models/user.js'
 
 class UserService extends BaseService {
 
     constructor() {
         super()
-        this._loginUsers = []
+        this._refreshTokens = []
     }
 
     /**
@@ -30,7 +32,7 @@ class UserService extends BaseService {
      */    
     async login(username, password) {
         if(!username || !password) {
-            return null
+            throw new HttpError('InvalidInputError', 'please enter username and password.', 400)
         }
         const user = await User.findOne({ where : { email : username, password }})
         const passwordCorrect = (user === null
@@ -39,7 +41,7 @@ class UserService extends BaseService {
         )
         
         if (!(user && passwordCorrect)) {
-            return null
+            throw new HttpError('InvalidInputError', 'invalid username or password.', 401)
         }
     
         const userForToken = {
@@ -48,130 +50,152 @@ class UserService extends BaseService {
             type : user.type
         }
     
-        const token = jwt.sign(
+        const shortToken = jwt.sign(
             userForToken,
             process.env.SECRET,
-            process.env.EXPIRE,
+            '2h',
             error => {
                 if(error) {
                     logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
-                } else {
-                    logger.info('JWT sign success.')
+                    throw(error)
                 }
             }
         )
-        if(!token){
-            return null
-        }
 
-        this._loginUsers.push(userForToken)
-        return token
-    }
-
-    /**
-     * @description: delete the user from list
-     * @param {*} id user id
-     * @return {*}
-     */
-    logout(id) {
-        if(!id) {
-            return null
-        }
-
-        const newUsers = this._loginUsers.filter(userinfo => userinfo.id !== id)
-        this._loginUsers = newUsers
-    }
-
-    /**
-     * @description: refresh token while userlist includes the id
-     * @param {*} id user id
-     * @return {*}
-     */
-    async refreshToken(id) {
-        if(!id) {
-            return null
-        }
-
-        const userForToken = this._loginUsers.findOne(userinfo => userinfo.id === id)
-        if(!userForToken) {
-            return null
-        }
-
-        const token = jwt.sign(
+        const longToken = jwt.sign(
             userForToken,
             process.env.SECRET,
-            process.env.EXPIRE,
+            '7d',
             error => {
                 if(error) {
                     logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
-                } else {
-                    logger.info('JWT sign success.')
+                    throw(error)
                 }
             }
         )
-        return token
+
+        const saltRounds = 10
+        const refreshToken = bcrypt.hashSync(longToken.concat(shortToken), saltRounds)
+
+        this._refreshTokens.push({userForToken, refreshToken})
+
+        return { id : user.id, type : user.type, shortToken, longToken }
     }
 
     /**
-     * @description: check if the userForToken logged in.
-     * @param {*} userForToken userForToken from client
+     * @description: delete the refreshToken from list set it loggout
+     * @param {*} longToken  long term token
      * @return {*}
      */
-    async verifyUserAuth(userForToken) {
-        if(!userForToken) {
-            return false
+    logout(shortToken) {
+        if(!shortToken) {
+            throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
         }
-        if (this._loginUsers.findOne(userinfo => userinfo === userForToken)) {
-            return true
+        
+        const userForToken = jwt.verify(
+            shortToken,
+            process.env.SECRET
+        )
+
+        const index = this._refreshTokens.findIndex(obj => obj.userForToken === userForToken)
+        if(index !== -1) {
+            this._refreshTokens.splice(index, 1)
         }
-        return false
+
+        return true
     }
 
-    createUser(userInfo) {
+    /**
+     * @description: refresh token when shortToken expired
+     * @param {*} shortToken
+     * @param {*} longToken
+     * @return {*}
+     */
+    async refreshToken(shortToken, longToken) {
+        if(!shortToken || !longToken) {
+            throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
+        }
+
+        const userForToken = jwt.verify(
+            shortToken,
+            process.env.SECRET
+        )
+
+        const index = this._refreshTokens.findIndex(obj => obj.userForToken === userForToken)
+        if(index === -1) {
+            throw new HttpError('JsonWebTokenError', 'user has been logged out.', 401)
+        }
+        if(!bcrypt.compare(longToken.concat(shortToken), this._refreshTokens[index].refreshToken)) {
+            throw new HttpError('JsonWebTokenError', 'invalid token.', 401)
+        }
+
+        const newShortToken = jwt.sign(
+            userForToken,
+            process.env.SECRET,
+            '2h',
+            error => {
+                if(error) {
+                    logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
+                    throw(error)
+                }
+            }
+        )
+
+        const saltRounds = 10
+        const refreshToken = bcrypt.hashSync(longToken.concat(newShortToken), saltRounds)
+
+        Object.assign(this._refreshTokens[index], refreshToken)
+
+        return newShortToken
+    }
+
+    async createUser(userInfo, type) {
         if(!userInfo) {
-            return false
+            return null
         }
         const { email, password, name, sex, birth} = userInfo
 
         const saltRounds = 10
         const passwordHash = bcrypt.hashSync(password, saltRounds)
 
-        const user = User.create({
+        const user = await User.create({
             email,
             passwordHash,
             name,
             sex,
             birth,
-            type : 0
+            type
         })
+
         return user
     }
 
-    getUser(id) {
+    async getUser(id) {
         if(!id) {
             return null
         }
-        const user = User.findByPk(id)
+        const user = await User.findByPk(id)
         return user
     }
 
-    createParticipant(participantInfo) {
+    async createParticipant(participantInfo) {
         if(!participantInfo) {
-            return false
+            throw new HttpError('InvalidInputError', 'please enter user information.', 400)
         }
         const { email, password, name, sex, birth } = participantInfo
 
-        const user = this.createUser({ email, password, name, sex, birth })
+        const user = this.createUser({ email, password, name, sex, birth }, 0)
         if(!user){
-            return false
+            logger.error('create user failed.')
+            throw new HttpError('SystemError', 'create user failed.', 500)
         }
 
-        const {country, state, industry, position, description} = participantInfo
-        const pets = participantInfo.pets.join(',')
-        const medicalHistory = participantInfo.medicalHistory.join(',')
-        const other = participantInfo.other.join(',')
+        const {country, state, industry, position, tags, description} = participantInfo
+        const pets = tags.pets.join(',')
+        const medicalHistory = tags.medicalHistory.join(',')
+        const other = tags.other.join(',')
 
-        const participant = Participant.create({
+        const participant = await Participant.create({
             userId : user.id,
             country,
             state,
@@ -183,49 +207,52 @@ class UserService extends BaseService {
             other
         })
         if(!participant){
-            return false
+            await user.destroy()
+            throw new HttpError('SystemError', 'create user failed.', 500)
         }
 
         return true
     }
 
-    getParticipant(id) {
+    async getParticipant(id) {
         if(!id) {
-            return null
+            throw new HttpError('InvalidInputError', 'please enter user id.', 400)
         }
-        const user = User.findByPk(id)
+        const user = await User.findByPk(id)
         if(!user) {
-            return null
+            throw new HttpError('NotFound', 'user not found', 404)
         }
-        const participant = Participant.findOne({ where : { userId : id }})
+        const participant = await Participant.findOne({ where : { userId : id }})
         if(!participant) {
-            return null
+            throw new HttpError('SystemError', 'user info lost', 404)
         }
 
-        const newParticipant = Object.assign(user.get(), participant.get())
-        const newFields = newParticipant.fields.split(',')
-        const newLinks = newParticipant.links.split(',')
-        const newOther = newParticipant.other.split(',')
-        Object.assign(newParticipant, {fields : newFields, links : newLinks, other : newOther})
+        const pets = participant.fields.split(',')
+        const medicalHistory = participant.links.split(',')
+        const other = participant.other.split(',')
+        const tags = {pets, medicalHistory, other}
 
-        return newParticipant.toJSON()
+        const newParticipant = Object.assign(user.get(), participant.get(), {tags})
+
+        return _.omit(newParticipant, ['passwordHash', 'createdAt', 'updatedAt', 'fields', 'links', 'other', 'userId']).toJSON()
     }
 
-    createResearcher(researcherInfo) {
+    async createResearcher(researcherInfo) {
         if(!researcherInfo) {
-            return null
+            throw new HttpError('InvalidInputError', 'please enter user information.', 400)
         }
         const { email, password, name, sex, birth} = researcherInfo
 
-        const user = this.createUser({ email, password, name, sex, birth })
+        const user = this.createUser({ email, password, name, sex, birth }, 1)
         if(!user){
-            return null
+            logger.error('create user failed.')
+            throw new HttpError('SystemError', 'create user failed.', 500)
         }
 
-        const {country, state, institute, title, description} = researcherInfo
-        const fields = researcherInfo.fields.join(',')
-        const links = researcherInfo.links.join(',')
-        const other = researcherInfo.other.join(',')
+        const {country, state, institute, title, tags, description} = researcherInfo
+        const fields = tags.fields.join(',')
+        const links = tags.links.join(',')
+        const other = tags.other.join(',')
 
         const researcher = Researcher.create({
             userId : user.id,
@@ -239,32 +266,34 @@ class UserService extends BaseService {
             other
         })
         if(!researcher){
-            return null
+            await user.destroy()
+            throw new HttpError('SystemError', 'create user failed.', 500)
         }
 
         return true
     }
 
-    getResearcher(id) {
+    async getResearcher(id) {
         if(!id) {
-            return null
+            throw new HttpError('InvalidInputError', 'please enter user id.', 400)
         }
-        const user = User.findByPk(id)
+        const user = await User.findByPk(id)
         if(!user) {
-            return null
+            throw new HttpError('NotFound', 'user not found', 404)
         }
-        const researcher = Researcher.findOne({ where : { userId : id }})
+        const researcher = await Researcher.findOne({ where : { userId : id }})
         if(!researcher) {
-            return null
+            throw new HttpError('SystemError', 'user info lost', 404)
         }
 
-        const newResercher = Object.assign(user.get(), researcher.get())
-        const fields = newResercher.fields.split(',')
-        const links = newResercher.links.split(',')
-        const other = newResercher.other.split(',')
-        Object.assign(newResercher, {fields, links, other})
+        const fields = researcher.fields.split(',')
+        const links = researcher.links.split(',')
+        const other = researcher.other.split(',')
+        const tags = {fields, links, other}
+        
+        const newResearcher = Object.assign(user.get(), researcher.get(), {tags})
 
-        return newResercher.toJSON()
+        return _.omit(newResearcher, ['passwordHash', 'createdAt', 'updatedAt', 'fields', 'links', 'other', 'userId']).toJSON()
     }
 }
 
