@@ -2,8 +2,6 @@ import jwt from 'jsonwebtoken'
 import { CustomError } from 'error.js'
 import logger from './logger.js'
 
-import userService from '../services/userService.js'
-
 const requestLogger = (request, response, next) => {
     logger.info('---')
     logger.info('Method:', request.method)
@@ -39,7 +37,7 @@ const errorHandler = (error, request, response, next) => {
 const tokenExtractor = (request, response, next) => {
     const authorization = request.get('authorization')
     if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-        Object.assign(request, {token: authorization.substring(7)})
+        Object.assign(request.body, {token: authorization.substring(7)})
         next()
     } else {
         const error = new CustomError('JsonWebTokenError', 'invalid token.')

@@ -1,167 +1,163 @@
 import { DataTypes, Model } from 'sequelize'
 
 const userSchema = {
-    id : {
-        type : DataTypes.STRING,
-        allowNull : false,
-        unique : true,
-        primaryKey : true
+    id: {
+        type: DataTypes.UUIDV4,
+        primaryKey: true
     },
-    //0:participant, 1:researcher
-    type : {
-        type : DataTypes.ENUM('0', '1'),
-        allowNull : false
+    type: {
+        //0:participant, 1:researcher
+        type: DataTypes.ENUM('0', '1'),
+        allowNull: false
     },
-    email : {
-        type : DataTypes.STRING,
-        allowNull : false,
-        unique : true
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
     },
-    passwordHash : {
-        type : DataTypes.STRING,
-        allowNull : false
+    passwordHash: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    name : {
-        type : DataTypes.STRING,
-        allowNull : false
+    firstName: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    sex : {
-        type : DataTypes.ENUM('female', 'male', 'other'),
-        allowNull : false
+    lastName: {  
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    birth : {
-        type : DataTypes.STRING,
-        allowNull : false
+    fullName: {
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['firstName', 'lastName']),
+        get() {
+            return `${this.getDataValue('firstName')} ${this.getDataValue('lastName')}`
+        }
+    },
+    sex: {
+        type: DataTypes.ENUM('female', 'male', 'nb'),
+        allowNull: false
+    },
+    birth: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    country_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'Country',
+            key: 'id'
+        }
+    },
+    state_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'State',
+            key: 'id'
+        }
     }
 }
 
 const participantSchema = {
-    id : {
-        type : DataTypes.STRING,
-        allowNull : false,
-        unique : true,
-        primaryKey : true
+    id: {
+        type: DataTypes.UUIDV4,
+        allowNull: false,
+        unique: true,
+        primaryKey: true
     },
-    userId : {
-        type : DataTypes.STRING,
-        allowNull :false,
-        unique : true,
-        references : {
-            model: 'User',
-            key: 'id'
+    industry_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'Industry',
+            key: 'id',
+            onUpdate: 'cascade',
+            onDelete: 'restrict'
         }
     },
-    country : {
-        type : DataTypes.STRING,
-        allowNull : false
+    position_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'Position',
+            key: 'id',
+            onUpdate: 'cascade',
+            onDelete: 'restrict'
+        }
     },
-    state : {
-        type : DataTypes.STRING,
-        allowNull : false
-    },
-    industry : {
-        type : DataTypes.STRING,
-        allowNull : false,
-    },
-    position : {
-        type : DataTypes.STRING,
-        allowNull : false
-    },
-    pets : {
-        type : DataTypes.STRING
-    },
-    medicalHistory : {
-        type : DataTypes.STRING
-    },
-    other : {
-        type : DataTypes.STRING
-    },
-    avatar : {
-        type : DataTypes.STRING,
-        unique : true,
-        allowNull : true
-    },
-    description : {
-        type : DataTypes.STRING
+    description: {
+        type: DataTypes.STRING
     }
 }
 
 const researcherSchema = {
-    id : {
-        type : DataTypes.STRING,
-        allowNull : false,
-        unique : true,
-        primaryKey : true
+    id: {
+        type: DataTypes.UUIDV4,
+        allowNull: false,
+        unique: true,
+        primaryKey: true
     },
-    userId : {
-        type : DataTypes.STRING,
-        allowNull :false,
-        unique : true,
-        references : {
-            model: 'User',
-            key: 'id'
+    institute_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'Institute',
+            key: 'id',
+            onUpdate: 'cascade',
+            onDelete: 'restrict'
         }
     },
-    country : {
-        type : DataTypes.STRING,
-        allowNull : false
+    title_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'Title',
+            key: 'id',
+            onUpdate: 'cascade',
+            onDelete: 'restrict'
+        }
     },
-    state : {
-        type : DataTypes.STRING,
-        allowNull : false
-    },
-    institute : {
-        type : DataTypes.STRING,
-        allowNull : false
-    },
-    title : {
-        type : DataTypes.STRING,
-        allowNull : false
-    },
-    fields : {
-        type : DataTypes.STRING
-    },
-    links : {
-        type : DataTypes.STRING
-    },
-    other : {
-        type : DataTypes.STRING
-    },
-    avatar : {
-        type : DataTypes.STRING,
-        unique : true,
-        allowNull : true
-    },
-    description : {
-        type : DataTypes.STRING
+    description: {
+        type: DataTypes.STRING
     }
 }
 
 class User extends Model {
     static associate(models) {
-        User.hasOne(models.Participant, { onDelete : 'cascade' })
-        User.hasOne(models.Researcher, { onDelete : 'cascade' })
+        this.hasOne(models.Participant, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Researcher, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
-class Participant extends Model {}
-class Researcher extends Model {}
+class Participant extends Model {
+    static associate(models) {
+        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    }
+}
+class Researcher extends Model {
+    static associate(models) {
+        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Avatar, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'restrict'})
+    }
+}
 
 function userInit(sequelize) {
     User.init(userSchema,{
         sequelize,
-        modelName: 'User'
-    }
-    )
+        paranoid: true
+    })
     Participant.init(participantSchema, {
         sequelize,
-        modelName: 'Participant'
+        paranoid: true
     })
     Researcher.init(researcherSchema, {
         sequelize,
-        modelName: 'Researcher'
+        paranoid: true
     })
 }
-
 
 export {
     userInit,

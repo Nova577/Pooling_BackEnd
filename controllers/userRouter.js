@@ -3,51 +3,35 @@ import userService from '../services/userService.js'
 
 const userRouter = express.Router()
 
-userRouter.post('/participant', ( request, response ) => {
-    const participantInfo = request.body
-    userService.createParticipant(participantInfo)
-    response
-        .status(200)
-        .send({ code : 0 , message : 'success' })
-})
-
 userRouter.get('/participant/:id', ( request, response ) => {
     const id = request.params.id
-    const user = userService.findUserByID('participant', id)
+    const userInfo = userService.getUserInfo(id)
     response
         .status(200)
-        .send({ code : 0 , data : { user } })
+        .send({ code : 0 , data : { userInfo } })
 })
 
 userRouter.put('/participant/:id', ( request, response ) => {
     const id = request.params.id
     const userInfo = request.body
-    const user = userService.updateUserInfoByID('participant', id, userInfo)
+    const user = userService.updateUserInfo(id, userInfo)
     response
         .status(200)
         .send({ code : 0 , data : { user } })
-})
-
-userRouter.post('/researcher', ( request, response ) => {
-    const { username, password } = request.body
-    userService.createResearcher(username, password)
-    response
-        .status(200)
-        .send({ code : 0 , message : 'success' })
 })
 
 userRouter.get('/researcher/:id', ( request, response ) => {
     const id = request.params.id
-    const user = userService.findUserByID('researcher', id)
+    const userInfo = userService.getUserInfo(id)
     response
         .status(200)
-        .send({ code : 0 , data : { user } })
+        .send({ code : 0 , data : { userInfo } })
 })
 
 userRouter.put('/researcher/:id', ( request, response ) => {
     const id = request.params.id
     const userInfo = request.body
-    const user = userService.updateUserInfoByID('researcher', id, userInfo)
+    const user = userService.updateUserInfo(id, userInfo)
     response
         .status(200)
         .send({ code : 0 , data : { user } })
