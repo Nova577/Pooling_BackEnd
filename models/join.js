@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize'
 import { User } from './user'
-import { Research } from './research'
+import { Research } from './project'
 import { Tag } from './tags'
 
 const cooperationGroupSchema = {

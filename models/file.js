@@ -17,7 +17,7 @@ const documentSchema = {
         type: DataTypes.ENUM('user', 'research'),
         allowNull: false
     },
-    owner_id: { 
+    owner_id: {
         type: DataTypes.UUIDV4,
         allowNull: false,
         references: {

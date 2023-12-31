@@ -66,6 +66,93 @@ class DataService extends BaseService {
         return database
     }
 
+    // async createData(databaseName, modelName, info) {
+    //     if(!databaseName || !modelName || !info) {
+    //         logger.error('invalid input:', databaseName, modelName, info)
+    //         return null
+    //     }
+    //     try {
+    //         const result = await this.getDatabase(databaseName).model(modelName).create(info)
+    //         return result.get().JSON()
+    //     }catch(error) {
+    //         logger.error('create data failed:', error)
+    //         return null
+    //     }
+    // }
+
+    // async getDataByOne(databaseName, modelName, query) {
+    //     if(!databaseName || !modelName || !query) {
+    //         logger.error('invalid input:', databaseName, modelName, query)
+    //         return null
+    //     }
+    //     try {
+    //         const result = await this.getDatabase(databaseName).model(modelName).findOne(query)
+    //         return result.get().JSON()
+    //     } catch(error) {
+    //         logger.error('get data failed:', error)
+    //         return null
+    //     }
+    // }
+
+    // async getDataByAll(databaseName, modelName, query) {
+    //     if(!databaseName || !modelName || !query) {
+    //         logger.error('invalid input:', databaseName, modelName, query)
+    //         return null
+    //     }
+    //     try {
+    //         const results = await this.getDatabase(databaseName).model(modelName).findAll(query)
+    //         return results.map(result => result.get().JSON())
+    //     } catch(error) {
+    //         logger.error('get data failed:', error)
+    //         return null
+    //     }
+    // }
+
+    // async getDataByPage(databaseName, modelName, query, page, pageSize) {
+    //     if(!databaseName || !modelName || !query) {
+    //         logger.error('invalid input:', databaseName, modelName, query)
+    //         return null
+    //     }
+    //     Object.assign(query, { limit: pageSize, offset: page * pageSize })
+    //     try {
+    //         const results = await this.getDatabase(databaseName).model(modelName).findAll(query)
+            
+    //         return results.map(result => result.get().JSON())
+    //     } catch(error) {
+    //         logger.error('get data failed:', error)
+    //         return null
+    //     }
+    // }
+
+    // //FIXME: cant expose model object to outside
+    // async setAssociatedById(databaseName, mainModel, subModel) {
+    //     if(!databaseName || !mainModel || !subModel) {
+    //         logger.error('invalid input:', databaseName, mainModel, subModel)
+    //         return null
+    //     }
+    //     try {
+    //         const result = await mainModel.set(subModel)
+    //         return result.get().JSON()
+    //     } catch(error) {
+    //         logger.error('append data failed:', error)
+    //         return null
+    //     }
+    // }
+
+    // //FIXME: cant expose model object to outside
+    // async getAssociatedById(databaseName, mainModel, subModel) {
+    //     if(!databaseName || !mainModel || !subModel) {
+    //         logger.error('invalid input:', databaseName, mainModel, subModel)
+    //         return null
+    //     }
+    //     try {
+    //         const result = await mainModel.get(subModel)
+    //         return result.get().JSON()
+    //     } catch(error) {
+    //         logger.error('get data failed:', error)
+    //         return null
+    //     }
+    // }
 }
 
 export default DataService

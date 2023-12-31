@@ -71,9 +71,7 @@ const participantSchema = {
         allowNull: false,
         references: {
             model: 'Industry',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            key: 'id'
         }
     },
     position_id: {
@@ -81,9 +79,7 @@ const participantSchema = {
         allowNull: false,
         references: {
             model: 'Position',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            key: 'id'
         }
     },
     description: {
@@ -103,9 +99,7 @@ const researcherSchema = {
         allowNull: false,
         references: {
             model: 'Institute',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            key: 'id'
         }
     },
     title_id: {
@@ -113,10 +107,12 @@ const researcherSchema = {
         allowNull: false,
         references: {
             model: 'Title',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            key: 'id'
         }
+    },
+    relatedLinks: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     description: {
         type: DataTypes.STRING
@@ -134,13 +130,15 @@ class Participant extends Model {
         this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
         this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
         this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Picture, {as: 'Avatar', constraints: false,foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 class Researcher extends Model {
     static associate(models) {
         this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Avatar, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'restrict'})
+        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 

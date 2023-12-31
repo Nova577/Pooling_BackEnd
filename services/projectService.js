@@ -1,9 +1,7 @@
-import _ from 'lodash'
-import jwt from 'jsonwebtoken'
+//import _ from 'lodash'
 import BaseService from './baseService.js'
-import logger from '../utils/logger.js'
+//import logger from '../utils/logger.js'
 import { HttpError } from '../utils/error.js'
-import { Research } from '../models/research.js'
 
 class ProjectService extends BaseService {
 
@@ -33,6 +31,8 @@ class ProjectService extends BaseService {
         }
         return true
     }
+
+
 }
 
 export default ProjectService

@@ -1,7 +1,7 @@
 import config from '../utils/config.js'
 import logger from '../utils/logger.js'
 import { userInit } from '../models/user.js'
-import { researchInit } from '../models/research.js'
+import { researchInit } from '../models/project.js'
 import { joinInit } from '../models/join.js'
 import DataService from '../services/dataService.js'
 

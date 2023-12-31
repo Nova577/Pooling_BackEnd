@@ -5,7 +5,7 @@ const countrySchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    country: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
@@ -23,13 +23,13 @@ const stateSchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    state: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
     }
 }
-class State extends Model { 
+class State extends Model {
     static associate(models) {
         this.hasOne(models.User, { foreignKey: 'state_id' })
     }
@@ -40,7 +40,7 @@ const industrySchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    industry: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
@@ -58,7 +58,7 @@ const positionSchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    position: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
@@ -75,7 +75,7 @@ const instituteSchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    institute: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
@@ -93,7 +93,7 @@ const titleSchema = {
         type: DataTypes.UUIDV4,
         primaryKey: true
     },
-    title: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
