@@ -56,10 +56,10 @@ class DataService extends BaseService {
         var database = undefined
 
         switch(type){
-        case 'mysql' :
+        case 'mysql':
             database = this._mysql
             break
-        default :
+        default:
             break
         }
         

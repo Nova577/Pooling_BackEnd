@@ -229,16 +229,14 @@ class UserService extends BaseService {
         if(!user) {
             throw new HttpError('NotFound', 'user not found', 404)
         }
-        const userInfo = _.omit(user.get(), ['passwordHash', 'type', 'createdAt', 'updatedAt'])
+        const userInfo = _.omit(user.get(), ['passwordHash', 'type', 'country_id', 'state_id', 'createdAt', 'updatedAt', 'deletedAt'])
 
         let roleInfo = null
         if(user.type === 0) {
             roleInfo = this.getParticipant(id)
-
         } else if (user.type  === 1) {
             roleInfo = this.getResearcher(id)
         }
-
         if(!roleInfo) {
             throw new HttpError('NotFound', 'user info lost', 404)
         }
@@ -262,14 +260,22 @@ class UserService extends BaseService {
             throw new HttpError('NotFound', 'user not found', 404)
         }
 
-        let role = null 
-        if(user.type === 0) {
-            role = Participant.findOne({ where : { userId : id }})
-        } else if (user.type === 1) {
-            role = Researcher.findOne({ where : { userId : id }})
+        let result = false
+        switch(user.type) {
+        case 0:
+            result = this.updateParticipant(id, userInfo)
+            break
+        case 1:
+            result = this.updateResearcher(id, userInfo)
+            break
+        default:
+            break
+        }
+        if(!result){
+            throw new HttpError('SystemError', 'update user failed.', 500)
         }
 
-        role.set()
+        return true
     }
 
     /**
@@ -433,7 +439,7 @@ class UserService extends BaseService {
             return false
         }
         
-        const participant = await Participant.findOne({ where: { userId: id }})
+        const participant = await Participant.findOne({ where: { user_id: id }})
         if(!participant) {
             logger.error('Invalid participant id.')
             return false
@@ -473,7 +479,7 @@ class UserService extends BaseService {
             return false
         }
 
-        const researcher = await Researcher.findOne({ where: { userId: id }})
+        const researcher = await Researcher.findOne({ where: { user_id: id }})
         if(!researcher) {
             logger.error('Invalid researcher id.')
             return false

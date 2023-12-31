@@ -14,10 +14,10 @@ userRouter.get('/participant/:id', ( request, response ) => {
 userRouter.put('/participant/:id', ( request, response ) => {
     const id = request.params.id
     const userInfo = request.body
-    const newUserInfo = userService.updateUserInfo(id, userInfo)
+    userService.updateUserInfo(id, userInfo)
     response
         .status(200)
-        .send({ code : 0 , data : { newUserInfo } })
+        .send({ code : 0 ,  message : 'success' })
 })
 
 userRouter.get('/researcher/:id', ( request, response ) => {
@@ -31,10 +31,10 @@ userRouter.get('/researcher/:id', ( request, response ) => {
 userRouter.put('/researcher/:id', ( request, response ) => {
     const id = request.params.id
     const userInfo = request.body
-    const newUserInfo = userService.updateUserInfo(id, userInfo)
+    userService.updateUserInfo(id, userInfo)
     response
         .status(200)
-        .send({ code : 0 , data : { newUserInfo } })
+        .send({ code : 0 ,  message : 'success' })
 })
 
 export default userRouter
