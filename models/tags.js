@@ -11,9 +11,10 @@ const tagSchema = {
         unique: true
     },
     type: {
-        //0: other, 1: pets 2: medicalHistory
+        //0: other, 1: pets 2: medicalHistory 3:fieds
         type: DataTypes.ENUM('other', 'pets', 'medicalHistory', 'fields'),
-        allowNull: false
+        allowNull: false,
+        defaultValue: 'other'
     }   
 }
 class Tag extends Model {}
