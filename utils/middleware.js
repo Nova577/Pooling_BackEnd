@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { CustomError } from 'error.js'
+import { HttpError } from './error.js'
 import logger from './logger.js'
 
 const requestLogger = (request, response, next) => {
@@ -13,7 +13,6 @@ const requestLogger = (request, response, next) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-    logger.error(`${error.name}: ${error.message} \n ${error.stack}`)
     if (error.name === 'ValidationError') {
         return response.status(400).send({
             code : '0',
@@ -29,8 +28,12 @@ const errorHandler = (error, request, response, next) => {
             code : 0,
             message: error.message 
         })
+    } else if (error instanceof HttpError) {
+        return response.status(error.status).json({
+            code : 0,
+            message: error.message 
+        })
     }
-
     next(error)
 }
 
@@ -40,7 +43,7 @@ const tokenExtractor = (request, response, next) => {
         Object.assign(request.body, {token: authorization.substring(7)})
         next()
     } else {
-        const error = new CustomError('JsonWebTokenError', 'invalid token.')
+        const error = new HttpError('JsonWebTokenError', 'invalid token.', 401)
         next(error)
     }
 }

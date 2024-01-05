@@ -1,9 +1,12 @@
 import express from 'express'
 import cors from 'cors'
-import config from '../utils/config.js'
 import logger from '../utils/logger.js'
 import middleware from '../utils/middleware.js'
+import signInRouter from '../controllers/signInRouter.js'
+import signUpRouter from '../controllers/signUpRouter.js'
 import authRouter from '../controllers/authRouter.js'
+import projectRouter from '../controllers/projectRouter.js'
+
 
 export default (app) => {
     //init basic module
@@ -11,12 +14,12 @@ export default (app) => {
     app.use(express.static('build'))
     app.use(express.json())
 
-    if(config.ENV !== 'production') {
-        app.use(middleware.requestLogger)
-    }
-
     //routers
-    app.use('/api/auth', authRouter)
+    app.use('/api/signUp', signUpRouter)
+    app.use('/api/signIn', signInRouter)
+    app.use('/api/project', middleware.tokenExtractor, middleware.userExtractor, projectRouter)
+    app.use('/api/auth', middleware.tokenExtractor, authRouter)
+    
 
     //error handle
     app.use(middleware.errorHandler)

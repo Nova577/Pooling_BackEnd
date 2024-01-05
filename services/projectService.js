@@ -3,7 +3,7 @@ import BaseService from './baseService.js'
 //import logger from '../utils/logger.js'
 import { HttpError } from '../utils/error.js'
 import { User } from '../models/user.js'
-import { Tag } from '../models/tags.js'
+import { Tag } from '../models/tag.js'
 import { Research, Appointment, Questionnaire, EassyQuestion, ChoiceQuestion } from '../models/project.js'
 
 class ProjectService extends BaseService {
@@ -331,4 +331,4 @@ class ProjectService extends BaseService {
     }
 }
 
-export default ProjectService
+export default ProjectService.getInstance()

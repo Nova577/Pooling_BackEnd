@@ -12,7 +12,7 @@ class UserService extends BaseService {
 
     constructor() {
         super()
-        this._refreshTokens = []
+        this._userTokens = []
     }
 
     /**
@@ -34,7 +34,7 @@ class UserService extends BaseService {
      */
     async signIn(username, password) {
         if(!username || !password) {
-            throw new HttpError('InvalidInputError', 'please enter username and password.', 400)
+            return new HttpError('InvalidInputError', 'please enter username and password.', 400)
         }
         const user = await User.findOne({ where: { email: username }})
         const passwordCorrect = (user === null
@@ -43,7 +43,7 @@ class UserService extends BaseService {
         )
         
         if (!(user && passwordCorrect)) {
-            throw new HttpError('InvalidInputError', 'invalid username or password.', 401)
+            return new HttpError('InvalidInputError', 'invalid username or password.', 401)
         }
     
         const userForToken = {
@@ -52,7 +52,7 @@ class UserService extends BaseService {
             type : user.type
         }
     
-        const shortToken = jwt.sign(
+        const token = jwt.sign(
             userForToken,
             process.env.SECRET,
             '2h',
@@ -64,7 +64,7 @@ class UserService extends BaseService {
             }
         )
 
-        const longToken = jwt.sign(
+        const refreshToken = jwt.sign(
             userForToken,
             process.env.SECRET,
             '7d',
@@ -77,61 +77,61 @@ class UserService extends BaseService {
         )
 
         const saltRounds = 10
-        const refreshToken = bcrypt.hashSync(longToken.concat(shortToken), saltRounds)
+        const refreshTokenHash = bcrypt.hashSync(refreshToken.concat(token), saltRounds)
 
-        this._refreshTokens.push({userForToken, refreshToken})
+        this._userTokens.push({userForToken, refreshTokenHash})
 
-        return { id : user.id, type : user.type, shortToken, longToken }
+        return { id : user.id, type : user.type, token, refreshToken }
     }
 
     /**
      * @description: delete the refreshToken from list set it loggout
-     * @param {*} shortToken
+     * @param {*} token
      * @return {*}
      */
-    signOut(shortToken) {
-        if(!shortToken) {
-            throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
+    signOut(token) {
+        if(!token) {
+            throw new HttpError('JsonWebTokenError', 'invalid token.', 401)
         }
         
         const userForToken = jwt.verify(
-            shortToken,
+            token,
             process.env.SECRET
         )
 
-        const index = this._refreshTokens.findIndex(obj => obj.userForToken === userForToken)
+        const index = this._userTokens.findIndex(obj => obj.userForToken === userForToken)
         if(index !== -1) {
-            this._refreshTokens.splice(index, 1)
+            this._userTokens.splice(index, 1)
         }
 
         return true
     }
 
     /**
-     * @description: refresh token when shortToken expired
-     * @param {*} shortToken
-     * @param {*} longToken
+     * @description: refresh token when token expired
+     * @param {*} token
+     * @param {*} refreshToken
      * @return {*}
      */
-    async refreshToken(shortToken, longToken) {
-        if(!shortToken || !longToken) {
+    async refreshToken(token, refreshToken) {
+        if(!token || !refreshToken) {
             throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
         }
 
         const userForToken = jwt.verify(
-            shortToken,
+            token,
             process.env.SECRET
         )
 
-        const index = this._refreshTokens.findIndex(obj => obj.userForToken === userForToken)
+        const index = this._userTokens.findIndex(obj => obj.userForToken === userForToken)
         if(index === -1) {
             throw new HttpError('JsonWebTokenError', 'user has been logged out.', 401)
         }
-        if(!bcrypt.compare(longToken.concat(shortToken), this._refreshTokens[index].refreshToken)) {
+        if(!bcrypt.compare(refreshToken.concat(token), this._userTokens[index].refreshTokenHash)) {
             throw new HttpError('JsonWebTokenError', 'invalid token.', 401)
         }
 
-        const newShortToken = jwt.sign(
+        const newToken = jwt.sign(
             userForToken,
             process.env.SECRET,
             '2h',
@@ -144,11 +144,11 @@ class UserService extends BaseService {
         )
 
         const saltRounds = 10
-        const refreshToken = bcrypt.hashSync(longToken.concat(newShortToken), saltRounds)
+        const refreshTokenHash = bcrypt.hashSync(refreshToken.concat(newToken), saltRounds)
 
-        Object.assign(this._refreshTokens[index], refreshToken)
+        Object.assign(this._userTokens[index], refreshTokenHash)
 
-        return newShortToken
+        return newToken
     }
 
     /**
@@ -159,14 +159,14 @@ class UserService extends BaseService {
      */
     async createUser(userInfo, type) {
         if(!userInfo) {
-            throw new HttpError('InvalidInputError', 'please enter user information.', 400)
+            throw new HttpError('InvalidInputError', 'please enter user info.', 400)
         }
 
         const {country, state} = userInfo
         const country_obj = await Country.findOne({ where: { name: country }})
         const state_obj = await State.findOne({ where: { name: state }})
         if(!country_obj || !state_obj) {
-            throw new HttpError('InvalidInputError', 'Unavaliable input.', 500)
+            throw new HttpError('InvalidInputError', 'invalid country or state.', 500)
         }
 
         const { email, password, name, sex, birth} = userInfo
@@ -189,7 +189,7 @@ class UserService extends BaseService {
         
         if (type === 0) {
             const { industry, position, tags, description } = userInfo
-            const participant = await this.createParticipant(
+            const participant = await this._createParticipant(
                 { industry, position, tags, description }
             )
             if(!participant){
@@ -200,7 +200,7 @@ class UserService extends BaseService {
 
         } else if (type === 1) {
             const { institute, title, links, tags, description } = userInfo
-            const researcher = await this.createResearcher(
+            const researcher = await this._createResearcher(
                 { institute, title, links, tags, description }
             )
             if(!researcher){
@@ -233,9 +233,9 @@ class UserService extends BaseService {
 
         let roleInfo = null
         if(user.type === 0) {
-            roleInfo = this.getParticipant(id)
+            roleInfo = this._getParticipant(id)
         } else if (user.type  === 1) {
-            roleInfo = this.getResearcher(id)
+            roleInfo = this._getResearcher(id)
         }
         if(!roleInfo) {
             throw new HttpError('NotFound', 'user info lost', 404)
@@ -263,10 +263,10 @@ class UserService extends BaseService {
         let result = false
         switch(user.type) {
         case 0:
-            result = this.updateParticipant(id, userInfo)
+            result = this._updateParticipant(id, userInfo)
             break
         case 1:
-            result = this.updateResearcher(id, userInfo)
+            result = this._updateResearcher(id, userInfo)
             break
         default:
             break
@@ -283,7 +283,7 @@ class UserService extends BaseService {
      * @param {*} participantInfo
      * @return {*}
      */
-    async createParticipant(participantInfo) {
+    async _createParticipant(participantInfo) {
         if(!participantInfo) {
             return null
         }
@@ -319,7 +319,7 @@ class UserService extends BaseService {
      * @param {*} participantInfo
      * @return {*}
      */
-    async createResearcher(researcherInfo) {
+    async _createResearcher(researcherInfo) {
         if(!researcherInfo) {
             return null
         }
@@ -356,7 +356,7 @@ class UserService extends BaseService {
      * @param {*} id
      * @return {*}
      */
-    async getParticipant(id) {
+    async _getParticipant(id) {
         if(!id) {
             return null
         }
@@ -397,7 +397,7 @@ class UserService extends BaseService {
      * @param {*} id
      * @return {*}
      */
-    async getResearcher(id) {
+    async _getResearcher(id) {
         if(!id) {
             return null
         }
@@ -434,7 +434,7 @@ class UserService extends BaseService {
      * @param {*} id
      * @return {*}
      */
-    async updateParticipant(id, userInfo) {
+    async _updateParticipant(id, userInfo) {
         if(!id || !userInfo) {
             return false
         }
@@ -474,7 +474,7 @@ class UserService extends BaseService {
      * @param {*} id
      * @return {*}
      */
-    async updateResearcher(id, userInfo) {
+    async _updateResearcher(id, userInfo) {
         if(!id || !userInfo) {
             return false
         }
@@ -510,4 +510,6 @@ class UserService extends BaseService {
     }
 }
 
-export default UserService
+
+
+export default UserService.getInstance()

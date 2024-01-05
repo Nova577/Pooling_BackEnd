@@ -155,5 +155,5 @@ class DataService extends BaseService {
     // }
 }
 
-export default DataService
+export default DataService.getInstance()
 

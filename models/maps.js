@@ -2,7 +2,8 @@ import { DataTypes, Model } from 'sequelize'
 
 const countrySchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -20,7 +21,8 @@ class Country extends Model {
 
 const stateSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -37,7 +39,8 @@ class State extends Model {
 
 const industrySchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -55,7 +58,8 @@ class Industry extends Model {
 
 const positionSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -72,7 +76,8 @@ class Position extends Model {
 
 const instituteSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -90,7 +95,8 @@ class Institute extends Model {
 
 const titleSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {

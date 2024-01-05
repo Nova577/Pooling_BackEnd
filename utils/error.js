@@ -12,7 +12,6 @@ class HttpError extends Error {
         super(message)
         this.name = name
         this.status = status
-        Error.captureStackTrace(this, this.constructor)
     }
 }
 

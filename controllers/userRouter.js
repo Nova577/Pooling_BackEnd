@@ -3,38 +3,54 @@ import userService from '../services/userService.js'
 
 const userRouter = express.Router()
 
-userRouter.get('/participant/:id', ( request, response ) => {
+userRouter.get('/participant/:id', async ( request, response, next ) => {
     const id = request.params.id
-    const userInfo = userService.getUserInfo(id)
-    response
-        .status(200)
-        .send({ code : 0 , data : { userInfo } })
+    try {
+        const userInfo = await userService.getUserInfo(id)
+        response
+            .status(200)
+            .send({ code : 0 , data : { userInfo } })
+    } catch (error) {
+        next(error)
+    }
 })
 
-userRouter.put('/participant/:id', ( request, response ) => {
+userRouter.put('/participant/:id', async ( request, response, next ) => {
     const id = request.params.id
     const userInfo = request.body
-    userService.updateUserInfo(id, userInfo)
-    response
-        .status(200)
-        .send({ code : 0 ,  message : 'success' })
+    try {
+        await userService.updateUserInfo(id, userInfo)
+        response
+            .status(200)
+            .send({ code : 0 ,  message : 'success' })
+    } catch (error) {
+        next(error)
+    }
 })
 
-userRouter.get('/researcher/:id', ( request, response ) => {
+userRouter.get('/researcher/:id', async ( request, response, next ) => {
     const id = request.params.id
-    const userInfo = userService.getUserInfo(id)
-    response
-        .status(200)
-        .send({ code : 0 , data : { userInfo } })
+    try {
+        const userInfo = await userService.getUserInfo(id)
+        response
+            .status(200)
+            .send({ code : 0 , data : { userInfo } })
+    } catch (error) {
+        next(error)
+    }
 })
 
-userRouter.put('/researcher/:id', ( request, response ) => {
+userRouter.put('/researcher/:id', async ( request, response, next ) => {
     const id = request.params.id
     const userInfo = request.body
-    userService.updateUserInfo(id, userInfo)
-    response
-        .status(200)
-        .send({ code : 0 ,  message : 'success' })
+    try {
+        userService.updateUserInfo(id, userInfo)
+        response
+            .status(200)
+            .send({ code : 0 ,  message : 'success' })
+    } catch (error) {
+        next(error)
+    }
 })
 
 export default userRouter

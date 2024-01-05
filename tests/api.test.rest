@@ -1,0 +1,32 @@
+###
+POST  http://localhost:3003/api/signUp/participant
+content-type: application/json
+
+{
+  "email": "user@example.com",
+  "first name": "Nova",
+  "last name": "Liu",
+  "sex": "female",
+  "birth": "1990-12-01",
+  "country": "China",
+  "state": "Shanghai",
+  "industry": "Internet",
+  "position": "Office Leader",
+  "tags": {
+    "pets": [
+      "012"
+    ],
+    "medicalHistory": [
+      "123"
+    ],
+    "other": [
+      "134"
+    ]
+  },
+  "password": "123456"
+}
+
+###
+POST http://localhost:3003/api/auth/signOut
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vdmFsaXUiLCJpZCI6IjY1NTQxOTU1NzE0ZmQ3Y2I0ZGRkZTRmNSIsImlhdCI6MTcwMDAxNDY3MywiZXhwIjoxNzAwMDE4MjczfQ.qIn4GQPqz6Btq6sD7nioSx4s3A8eO4afb8K4EIOaJHM
+

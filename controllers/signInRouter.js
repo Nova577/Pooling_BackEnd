@@ -3,12 +3,16 @@ import userService from '../services/userService.js'
 
 const signInRouter = express.Router()
 
-signInRouter.post('/signIn', ( request, response ) => {
+signInRouter.post('/signIn', async ( request, response, next ) => {
     const { username, password } = request.body
-    const { id, type, shortToken, longToken } = userService.signIn(username, password)
-    response
-        .status(200)
-        .send({ code : 0 , data : { id, type, shortToken, longToken } })
+    try {
+        const { id, type, token, refreshToken } = await userService.signIn(username, password)
+        response
+            .status(200)
+            .send({ code : 0 , data : { id, type, token, refreshToken }})
+    } catch (error) {
+        next(error)
+    }
 })
 
 export default signInRouter

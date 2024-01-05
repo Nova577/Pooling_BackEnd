@@ -2,7 +2,8 @@ import { DataTypes, Model } from 'sequelize'
 
 const researchSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true,
     },
     name: {
@@ -10,11 +11,11 @@ const researchSchema = {
         allowNull: false
     },
     headCount: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     reward: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     description: {
@@ -23,7 +24,7 @@ const researchSchema = {
     },
     status: {
         //0: draft, 1: in progress, 2: closed
-        type: DataTypes.ENUM('0', '1', '2'),
+        type: DataTypes.STRING,
         allowNull: false
     },
 }
@@ -40,7 +41,8 @@ class Research extends Model {
 
 const appointmentSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -76,7 +78,8 @@ class Appointment extends Model {
 
 const questionnaireSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -92,12 +95,12 @@ const questionnaireSchema = {
         allowNull: false
     },
     timeLimit: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     status: {
         //0: draft, 1: published
-        type: DataTypes.ENUM('0', '1'),
+        type: DataTypes.STRING,
         allowNull: false
     }
 }
@@ -109,11 +112,12 @@ class Questionnaire extends Model {
 
 const eassyQuestionSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     number: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     question: {
@@ -129,11 +133,12 @@ class EassyQuestion extends Model {
 
 const choiceQuestionSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     number: {  
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     question: {
@@ -145,7 +150,7 @@ const choiceQuestionSchema = {
         allowNull: false
     },
     choice:  {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 }
@@ -155,7 +160,7 @@ class ChoiceQuestion extends Model {
     }
 }
 
-function researchInit(sequelize) {
+function projectInit(sequelize) {
     Research.init(researchSchema, {
         sequelize,
         paranoid: true
@@ -179,7 +184,7 @@ function researchInit(sequelize) {
 }
 
 export { 
-    researchInit,
+    projectInit,
     Research, 
     Appointment, 
     Questionnaire, 

@@ -1,19 +1,23 @@
 import config from '../utils/config.js'
 import logger from '../utils/logger.js'
 import { userInit } from '../models/user.js'
-import { researchInit } from '../models/project.js'
+import { projectInit } from '../models/project.js'
+import { mapInit } from '../models/maps.js'
+import { tagInit } from '../models/tag.js'
+import { fileInit } from '../models/file.js'
 import { joinInit } from '../models/join.js'
-import DataService from '../services/dataService.js'
-
-const dataService = DataService.getInstance()
+import dataService from '../services/dataService.js'
 
 export default async () => {
     //init dataService
     await dataService.init(config.DATABASE)
     //init mysql
     const mysql = dataService.getDatabase('mysql')
+    mapInit(mysql)
+    tagInit(mysql)
     userInit(mysql)
-    researchInit(mysql)
+    projectInit(mysql)
+    fileInit(mysql)
     joinInit(mysql)
 
     try {

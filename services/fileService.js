@@ -37,4 +37,4 @@ class FileService extends BaseService {
 
 }
 
-export default FileService
+export default FileService.getInstance()

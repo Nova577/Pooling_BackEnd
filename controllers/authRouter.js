@@ -3,20 +3,28 @@ import userService from '../services/userService.js'
 
 const authRouter = express.Router()
 
-authRouter.post('/refreshToken', ( request, response ) => {
-    const { shortToken, longToken } = request.body
-    const token  = userService.refreshToken(shortToken, longToken)
-    response
-        .status(200)
-        .send({ code : 0 , data : { token } })
+authRouter.post('/refreshToken', async ( request, response, next ) => {
+    const { token, refreshToken } = request.body
+    try {
+        const newToken  = await userService.refreshToken(token, refreshToken)
+        response
+            .status(200)
+            .send({ code : 0 , data : { token: newToken } })
+    } catch (error) {
+        next(error)
+    }
 })
 
-authRouter.post('/signOut', ( request, response ) => {
-    const { shortToken } = request.body
-    userService.signOut(shortToken)
-    response
-        .status(200)
-        .send({ code : 0 , message : 'logout success.' })
+authRouter.post('/signOut', async ( request, response, next ) => {
+    const { token } = request.body
+    try {
+        await userService.signOut(token)
+        response
+            .status(200)
+            .send({ code : 0 , message : 'logout success.' })
+    } catch (error) {
+        next(error)
+    }
 })
 
 export default authRouter

@@ -1,13 +1,15 @@
 import { DataTypes, Model } from 'sequelize'
+import { Country, State, Industry, Position, Institute, Title } from './maps.js'
 
 const userSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     type: {
-        //0:participant, 1:researcher
-        type: DataTypes.ENUM('0', '1'),
+        //0: participant, 1: researcher
+        type: DataTypes.STRING,
         allowNull: false
     },
     email: {
@@ -34,7 +36,8 @@ const userSchema = {
         }
     },
     sex: {
-        type: DataTypes.ENUM('female', 'male', 'nb'),
+        //0: female, 1: male, 2: non-binary
+        type: DataTypes.STRING,
         allowNull: false
     },
     birth: {
@@ -42,18 +45,18 @@ const userSchema = {
         allowNull: false
     },
     country_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Country',
+            model: Country,
             key: 'id'
         }
     },
     state_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'State',
+            model: State,
             key: 'id'
         }
     }
@@ -61,24 +64,23 @@ const userSchema = {
 
 const participantSchema = {
     id: {
-        type: DataTypes.UUIDV4,
-        allowNull: false,
-        unique: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     industry_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Industry',
+            model: Industry,
             key: 'id'
         }
     },
     position_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Position',
+            model: Position,
             key: 'id'
         }
     },
@@ -89,24 +91,23 @@ const participantSchema = {
 
 const researcherSchema = {
     id: {
-        type: DataTypes.UUIDV4,
-        allowNull: false,
-        unique: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     institute_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Institute',
+            model: Institute,
             key: 'id'
         }
     },
     title_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Title',
+            model: Title,
             key: 'id'
         }
     },

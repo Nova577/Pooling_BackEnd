@@ -1,8 +1,10 @@
 import { DataTypes, Model } from 'sequelize'
+import { User } from './user.js'
 
 const documentSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -10,25 +12,20 @@ const documentSchema = {
         allowNull: false
     },
     format: {
-        type: DataTypes.ENUM('doc', 'docx', 'pdf', 'ppt', 'pptx', 'xls', 'xlsx'),
-        allowNull: false
-    },
-    owner: {
-        type: DataTypes.ENUM('user', 'research'),
+        //doc, docx, pdf, ppt, pptx, xls, xlsx
+        type: DataTypes.STRING,
         allowNull: false
     },
     owner_id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'User',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            model: User,
+            key: 'id'
         }
     },
     url: {
-        type: DataTypes.DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
         allowNull: false,
         get() {
             return `/${this.getDataValue('owner')}/${this.getDataValue('owner_id')}/documents/${this.getDataValue('id')}.${this.getDataValue('format')}`
@@ -37,13 +34,14 @@ const documentSchema = {
 }
 class Document extends Model {
     static associate(models) {
-        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 
 const pictureSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -51,25 +49,20 @@ const pictureSchema = {
         allowNull: false
     },
     format: {
-        type: DataTypes.ENUM('jpg', 'png', 'gif'),
-        allowNull: false
-    },
-    owner: {
-        type: DataTypes.ENUM('user', 'research'),
+        //jpg, png
+        type: DataTypes.STRING,
         allowNull: false
     },
     owner_id: { 
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'User',
-            key: 'id',
-            onUpdate: 'cascade',
-            onDelete: 'restrict'
+            model: User,
+            key: 'id'
         }
     },
     url: {
-        type: DataTypes.DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
         allowNull: false,
         get() {
             return `/${this.getDataValue('owner')}/${this.getDataValue('owner_id')}/pictures/${this.getDataValue('id')}.${this.getDataValue('format')}`
@@ -78,7 +71,7 @@ const pictureSchema = {
 }
 class Picture extends Model {
     static associate(models) {
-        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 

@@ -2,7 +2,8 @@ import { DataTypes, Model } from 'sequelize'
 
 const tagSchema = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUID,
         primaryKey: true
     },
     name: {
@@ -11,8 +12,8 @@ const tagSchema = {
         unique: true
     },
     type: {
-        //0: other, 1: pets 2: medicalHistory 3:fieds
-        type: DataTypes.ENUM('other', 'pets', 'medicalHistory', 'fields'),
+        //other, pets, medicalHistory, fieds
+        type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'other'
     }   

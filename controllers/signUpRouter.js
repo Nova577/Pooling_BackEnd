@@ -3,20 +3,28 @@ import userService from '../services/userService.js'
 
 const signUpRouter = express.Router()
 
-signUpRouter.post('/participant', ( request, response ) => {
+signUpRouter.post('/participant', async ( request, response, next ) => {
     const participantInfo = request.body
-    userService.createUser(participantInfo, 0)
-    response
-        .status(200)
-        .send({ code : 0 , message : 'success' })
+    try { 
+        await userService.createUser(participantInfo, 0)
+        response
+            .status(200)
+            .send({ code : 0 , message : 'success' })
+    } catch (error) {
+        next(error)
+    }
 })
 
-signUpRouter.post('/researcher', ( request, response ) => {
+signUpRouter.post('/researcher', ( request, response, next ) => {
     const researcherInfo = request.body
-    userService.createUser(researcherInfo, 1)
-    response
-        .status(200)
-        .send({ code : 0 , message : 'success' })
+    try{
+        userService.createUser(researcherInfo, 1)
+        response
+            .status(200)
+            .send({ code : 0 , message : 'success' })
+    } catch (error) {
+        next(error)
+    }
 })
 
 export default signUpRouter

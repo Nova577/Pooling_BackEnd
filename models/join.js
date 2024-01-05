@@ -1,12 +1,13 @@
 import { DataTypes } from 'sequelize'
-import { User } from './user'
-import { Research } from './project'
-import { Tag } from './tags'
+import { User } from './user.js'
+import { Research } from './project.js'
+import { Tag } from './tag.js'
 
 const cooperationGroupSchema = {
     status: {
         //0: pending, 1: accepted, 2: rejected
-        type: DataTypes.ENUM('0', '1', '2'),
+        type: DataTypes.STRING,
+        defaultvalue: '0',
         allowNull: false
     }
 }
@@ -22,11 +23,11 @@ function joinInit(sequelize) {
 
     const UserTag = sequelize.define('UserTag', userTagSchema)
     User.belongsToMany(Tag, { through: UserTag })
-    Tag.belongsToMany(Research, { through: UserTag })
+    Tag.belongsToMany(User, { through: UserTag })
 
     const ResearchTag = sequelize.define('ResearchTag', researchTagSchema)
     Research.belongsToMany(Tag, { through: ResearchTag })
-    Tag.belongsToMany(User, { through: ResearchTag })
+    Tag.belongsToMany(Research, { through: ResearchTag })
 }
 
 export {
