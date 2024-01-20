@@ -1,17 +1,17 @@
-###
+### SignUp Participant
 POST  http://localhost:3003/api/signUp/participant
 content-type: application/json
 
 {
-  "email": "user@example.com",
-  "first name": "Nova",
-  "last name": "Liu",
-  "sex": "female",
+  "email": "123@example.com",
+  "firstName": "Nova",
+  "lastName": "Liu",
+  "sex": "0",
   "birth": "1990-12-01",
   "country": "China",
   "state": "Shanghai",
-  "industry": "Internet",
-  "position": "Office Leader",
+  "section": "Manufacturing",
+  "occupation": "Engineering, Science and Transport Professionals",
   "tags": {
     "pets": [
       "012"
@@ -26,7 +26,103 @@ content-type: application/json
   "password": "123456"
 }
 
-###
+### SignUp Researcher
+POST  http://localhost:3003/api/signUp/researcher
+content-type: application/json
+
+{
+  "email": "456@example.com",
+  "firstName": "Nova",
+  "lastName": "Liu",
+  "sex": "0",
+  "birth": "1990-12-01",
+  "country": "China",
+  "state": "Shanghai",
+  "institute": "University of Oxford",
+  "title": "Professor",
+  "tags": {
+    "researchFields": [
+      "012"
+    ],
+    "other": [
+      "134"
+    ]
+  },
+  "relatedLinks" : [
+    "https://www.google.com"
+  ],
+  "password": "123456"
+}
+
+### SignIn
+POST http://localhost:3003/api/signIn
+Content-Type: application/json
+
+{
+  "userName": "123@example.com",
+  "password": "123456"
+}
+
+### SignIn Response    
+"id": "3ae9178d-ae99-42ca-80e4-e4946c3174f3",
+    "type": "0",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNTc3NzE3OX0.QhYc0077SgFHtJj3Dy5d5RY36QaSa1gE_DLQBcRJYSE",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNjM3NDc3OX0.Qh_z90dpA2jMeyKEFAEoj5Omgn-sAqbxeaCqbUqDhtc"
+
+### SignOut
 POST http://localhost:3003/api/auth/signOut
-authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vdmFsaXUiLCJpZCI6IjY1NTQxOTU1NzE0ZmQ3Y2I0ZGRkZTRmNSIsImlhdCI6MTcwMDAxNDY3MywiZXhwIjoxNzAwMDE4MjczfQ.qIn4GQPqz6Btq6sD7nioSx4s3A8eO4afb8K4EIOaJHM
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImExMmRmMmIyLTZmNGItNDcxYS1hNmEzLTgwZGM5ZmE5YjcwMiIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njc2MzksImV4cCI6MTcwNTc3NDgzOX0.WdcLIu9EfqaPcIc6QfyFYlTUm9J2bjxzOTkZWNQj1V4
+
+### refreshToken
+POST http://localhost:3003/api/auth/refreshToken
+Content-Type: application/json
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlmMzM0YjA1LTY1Y2ItNDU5NC04ZDc5LTA5ZDNkYzFmODhmZCIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3NjcyMzcsImV4cCI6MTcwNTc3NDQzN30.dy9GiX2Mv6mcEzwq_tzng4ht5M_ybZly-29i2mVaz24
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlmMzM0YjA1LTY1Y2ItNDU5NC04ZDc5LTA5ZDNkYzFmODhmZCIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3NjcxNzAsImV4cCI6MTcwNjM3MTk3MH0.fn36RwOpzge4rM0wJj8DdWZYFG9G1g8L7XFz_ynNnH4"
+}
+
+### refresh token response
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNjOWJhNDdiLTBkMWYtNGZiOS1iYTM1LWVlYWIzZWYyMDljZSIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDUwNzgxNjMsImV4cCI6MTcwNTA4NTM2M30.TkbgxcUOXHBCfnZ-ADXl1oHLoSzTk4Yh0nE0OQ_5jlE"
+
+### Get Participant
+GET http://localhost:3003/api/participant/3ae9178d-ae99-42ca-80e4-e4946c3174f3
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNTc3NzE3OX0.QhYc0077SgFHtJj3Dy5d5RY36QaSa1gE_DLQBcRJYSE
+
+### Update Participant
+PUT http://localhost:3003/api/participant/12131252354
+
+### Get Researcher
+GET http://localhost:3003/api/researcher/12131252354
+ 
+### Update Researcher
+PUT http://localhost:3003/api/researcher/12131252354
+
+### Create Research
+POST http://localhost:3003/api/research
+
+### Get Research
+GET http://localhost:3003/api/research/12131252354
+
+### Update Research
+PUT http://localhost:3003/api/research/12131252354
+
+### Create Appointment
+POST http://localhost:3003/api/appointment
+
+### Get Appointment
+GET http://localhost:3003/api/appointment/12131252354
+
+### Update Appointment
+PUT http://localhost:3003/api/appointment/12131252354
+
+### Create Questionnaire
+POST http://localhost:3003/api/questionnaire
+
+### Get Questionnaire
+GET http://localhost:3003/api/questionnaire/12131252354
+
+### Update Questionnaire
+PUT http://localhost:3003/api/questionnaire/12131252354
+
 

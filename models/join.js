@@ -1,9 +1,15 @@
 import { DataTypes } from 'sequelize'
-import { User } from './user.js'
+import { User, Participant, Researcher } from './user.js'
 import { Research } from './project.js'
 import { Tag } from './tag.js'
+import { Document, Picture } from './file.js'
 
 const cooperationGroupSchema = {
+    role: {
+        //0: creator, 1: cooperater
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     status: {
         //0: pending, 1: accepted, 2: rejected
         type: DataTypes.STRING,
@@ -12,22 +18,41 @@ const cooperationGroupSchema = {
     }
 }
 
-const userTagSchema = {}
-
 const researchTagSchema = {}
+
+const participantTagSchema = {}
+
+const researcherTagSchema = {}
+
+const researchDocumentSchema = {
+}
+
+const researchPictureSchema = {}
 
 function joinInit(sequelize) {
     const CooperationGroup = sequelize.define('CooperationGroup', cooperationGroupSchema)
     Research.belongsToMany(User, { through: CooperationGroup })
     User.belongsToMany(Research, { through: CooperationGroup })
 
-    const UserTag = sequelize.define('UserTag', userTagSchema)
-    User.belongsToMany(Tag, { through: UserTag })
-    Tag.belongsToMany(User, { through: UserTag })
-
     const ResearchTag = sequelize.define('ResearchTag', researchTagSchema)
     Research.belongsToMany(Tag, { through: ResearchTag })
     Tag.belongsToMany(Research, { through: ResearchTag })
+
+    const ParticipantTag = sequelize.define('ParticipantTag',participantTagSchema)
+    Participant.belongsToMany(Tag, { through: ParticipantTag })
+    Tag.belongsToMany(Participant, { through: ParticipantTag })
+
+    const ResearcherTag = sequelize.define('ResearcherTag', researcherTagSchema)
+    Researcher.belongsToMany(Tag, { through: ResearcherTag })
+    Tag.belongsToMany(Researcher, { through: ResearcherTag })
+
+    const ResearchDocument = sequelize.define('ResearchDocument', researchDocumentSchema)
+    Research.belongsToMany(Document, { through: ResearchDocument })
+    Document.belongsToMany(Research, { through: ResearchDocument })
+
+    const ResearchPicture = sequelize.define('ResearchPicture', researchPictureSchema)
+    Research.belongsToMany(Picture, { through: ResearchPicture })
+    Picture.belongsToMany(Research, { through: ResearchPicture })
 }
 
 export {

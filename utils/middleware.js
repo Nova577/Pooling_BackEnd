@@ -52,14 +52,10 @@ const userExtractor = async (request, response, next) => {
     //check if this token valid or expired
     const decoded = jwt.verify(
         request.token,
-        process.env.SECRET, 
-        error => {
-            if(error) {
-                next(error)
-            }
-        }
+        process.env.SECRET
     )
     Object.assign(request, {user: decoded})
+    next()
 }
 
 const unknownEndpoint = (request, response) => {

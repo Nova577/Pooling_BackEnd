@@ -1,10 +1,10 @@
 import { DataTypes, Model } from 'sequelize'
-import { Country, State, Industry, Position, Institute, Title } from './maps.js'
+import { Country, State, Section, Occupation, Institute, Title } from './maps.js'
 
 const userSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     type: {
@@ -45,7 +45,7 @@ const userSchema = {
         allowNull: false
     },
     country_id: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Country,
@@ -53,7 +53,7 @@ const userSchema = {
         }
     },
     state_id: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: State,
@@ -61,26 +61,43 @@ const userSchema = {
         }
     }
 }
+class User extends Model {
+    static associate(models) {
+        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Participant, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Researcher, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    }
+}
 
 const participantSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
-    industry_id: {
-        type: DataTypes.UUID,
+    section_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: Industry,
+            model: Section,
             key: 'id'
         }
     },
-    position_id: {
+    occupation_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Occupation,
+            key: 'id'
+        }
+    },
+    user_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: Position,
+            model: User,
             key: 'id'
         }
     },
@@ -88,15 +105,20 @@ const participantSchema = {
         type: DataTypes.STRING
     }
 }
+class Participant extends Model {
+    static associate(models) {
+        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'restrict'})
+    }
+}
 
 const researcherSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     institute_id: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Institute,
@@ -104,10 +126,18 @@ const researcherSchema = {
         }
     },
     title_id: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Title,
+            key: 'id'
+        }
+    },
+    user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: User,
             key: 'id'
         }
     },
@@ -119,27 +149,9 @@ const researcherSchema = {
         type: DataTypes.STRING
     }
 }
-
-class User extends Model {
-    static associate(models) {
-        this.hasOne(models.Participant, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Researcher, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-    }
-}
-class Participant extends Model {
-    static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Picture, {as: 'Avatar', constraints: false,foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-    }
-}
 class Researcher extends Model {
     static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'restrict'})
     }
 }
 

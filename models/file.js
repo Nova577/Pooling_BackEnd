@@ -4,7 +4,7 @@ import { User } from './user.js'
 const documentSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     name: {
@@ -25,23 +25,23 @@ const documentSchema = {
         }
     },
     url: {
-        type: DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['owner_id','id', 'format']),
         allowNull: false,
         get() {
-            return `/${this.getDataValue('owner')}/${this.getDataValue('owner_id')}/documents/${this.getDataValue('id')}.${this.getDataValue('format')}`
+            return `/${this.getDataValue('owner_id')}/documents/${this.getDataValue('id')}.${this.getDataValue('format')}`
         }
     }
 }
 class Document extends Model {
     static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade', constraints: false})
     }
 }
 
 const pictureSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     name: {
@@ -58,14 +58,15 @@ const pictureSchema = {
         allowNull: false,
         references: {
             model: User,
-            key: 'id'
+            key: 'id',
+            constraints: false
         }
     },
     url: {
-        type: DataTypes.VIRTUAL(DataTypes.STRING, ['research_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['owner_id','id', 'format']),
         allowNull: false,
         get() {
-            return `/${this.getDataValue('owner')}/${this.getDataValue('owner_id')}/pictures/${this.getDataValue('id')}.${this.getDataValue('format')}`
+            return `/${this.getDataValue('owner_id')}/pictures/${this.getDataValue('id')}.${this.getDataValue('format')}`
         }
     }
 }

@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize'
 const researchSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
     name: {
@@ -33,16 +33,13 @@ class Research extends Model {
         this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'restrict'})
         this.hasOne(models.Appointment, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
         this.hasOne(models.Questionnaire, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Picture, {foreignKey: 'owner_id',  onUpdate: 'cascade', onDelete: 'cascade' })
-        this.hasOne(models.Picture, {as: 'Cover', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 
 const appointmentSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     name: {
@@ -79,7 +76,7 @@ class Appointment extends Model {
 const questionnaireSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     name: {
@@ -113,7 +110,7 @@ class Questionnaire extends Model {
 const eassyQuestionSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     number: {
@@ -134,7 +131,7 @@ class EassyQuestion extends Model {
 const choiceQuestionSchema = {
     id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
     number: {  

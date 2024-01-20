@@ -2,8 +2,7 @@ import { DataTypes, Model } from 'sequelize'
 
 const countrySchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
@@ -12,35 +11,41 @@ const countrySchema = {
         unique: true
     }
 }
-class Country extends Model { 
+class Country extends Model {
     static associate(models) {
-        this.hasOne(models.User, { foreignKey: 'country_id' })
+        this.hasMany(models.User, { foreignKey: 'country_id' })
         this.hasMany(models.State, { foreignKey: 'country_id' })
     }
 }
 
 const stateSchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
+    },
+    country_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Country,
+            key: 'id'
+        }
     }
 }
 class State extends Model {
     static associate(models) {
-        this.hasOne(models.User, { foreignKey: 'state_id' })
+        this.hasMany(models.User, { foreignKey: 'state_id' })
     }
 }
 
-const industrySchema = {
+const sectionSchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
@@ -49,17 +54,15 @@ const industrySchema = {
         unique: true
     }
 }
-class Industry extends Model { 
+class Section extends Model {
     static associate(models) {
-        this.hasOne(models.Participant, { foreignKey: 'industry_id' })
-        this.hasMany(models.position, { foreignKey: 'industry_id' })
+        this.hasMany(models.Participant, { foreignKey: 'section_id' })
     }
 }
 
-const positionSchema = {
+const occupationSchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
@@ -68,16 +71,15 @@ const positionSchema = {
         unique: true
     }
 }
-class Position extends Model {
+class Occupation extends Model {
     static associate(models) {
-        this.hasOne(models.Participant, { foreignKey: 'position_id' })
+        this.hasMany(models.Participant, { foreignKey: 'occupation_id' })
     }
 }
 
 const instituteSchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
@@ -88,15 +90,13 @@ const instituteSchema = {
 }
 class Institute extends Model {
     static associate(models) {
-        this.hasOne(models.Researcher, { foreignKey: 'institute_id' })
-        this.hasMany(models.Title, { foreignKey: 'institute_id' })
+        this.hasMany(models.Researcher, { foreignKey: 'institute_id' })
     }
 }
 
 const titleSchema = {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         primaryKey: true
     },
     name: {
@@ -107,37 +107,37 @@ const titleSchema = {
 }
 class Title extends Model {
     static associate(models) {
-        this.hasOne(models.Researcher, { foreignKey: 'title_id' })
+        this.hasMany(models.Researcher, { foreignKey: 'title_id' })
     }
 }
 
 function mapInit(sequelize) {
-    Country.init(countrySchema, { 
+    Country.init(countrySchema, {
         sequelize, 
         timestamps: false,
         paranoid: true
     })
-    State.init(stateSchema, { 
+    State.init(stateSchema, {
         sequelize, 
         timestamps: false,
         paranoid: true
     })
-    Industry.init(industrySchema, { 
+    Section.init(sectionSchema, {
         sequelize, 
         timestamps: false,
         paranoid: true
     })
-    Position.init(positionSchema, { 
+    Occupation.init(occupationSchema, {
         sequelize, 
         timestamps: false,
         paranoid: true
     })
-    Institute.init(instituteSchema, { 
+    Institute.init(instituteSchema, {
         sequelize, 
         timestamps: false,
         paranoid: true 
     })
-    Title.init(titleSchema, { 
+    Title.init(titleSchema, {
         sequelize,
         timestamps: false,
         paranoid: true
@@ -148,8 +148,8 @@ export {
     mapInit,
     Country,
     State,
-    Industry,
-    Position,
+    Section,
+    Occupation,
     Institute,
     Title
 }

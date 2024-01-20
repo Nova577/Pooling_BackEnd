@@ -6,6 +6,7 @@ import signInRouter from '../controllers/signInRouter.js'
 import signUpRouter from '../controllers/signUpRouter.js'
 import authRouter from '../controllers/authRouter.js'
 import projectRouter from '../controllers/projectRouter.js'
+import userRouter from '../controllers/userRouter.js'
 
 
 export default (app) => {
@@ -15,10 +16,12 @@ export default (app) => {
     app.use(express.json())
 
     //routers
+    app.use('/api', userRouter)
     app.use('/api/signUp', signUpRouter)
     app.use('/api/signIn', signInRouter)
-    app.use('/api/project', middleware.tokenExtractor, middleware.userExtractor, projectRouter)
     app.use('/api/auth', middleware.tokenExtractor, authRouter)
+    app.use('/api/project', middleware.tokenExtractor, middleware.userExtractor, projectRouter)
+    
     
 
     //error handle

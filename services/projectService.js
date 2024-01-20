@@ -28,7 +28,7 @@ class ProjectService extends BaseService {
      * @param {*} researchInfo
      * @return {*}
      */
-    async createResearch(creator, researchInfo) {
+    async createResearch(researchInfo) {
         if(!researchInfo) {
             throw new HttpError('InvalidInputError', 'researchInfo is required.', 400)
         }
@@ -46,25 +46,24 @@ class ProjectService extends BaseService {
         }
 
         const { picture_id, appointment_id, questionnarie_id } = researchInfo
-        research.setCover(picture_id)
+        research.setPicture(picture_id)
         research.setAppointment(appointment_id)
         research.setQuestionnarie(questionnarie_id)
 
-        const {documents, cooperators, preference} = researchInfo
-        documents.map(document => research.addDocument(document.id))
+        const {documents, cooperators, creator, preference} = researchInfo
+        const documents_id = documents.map(document => document.id)
+        research.setDocuments(documents_id)
         cooperators.map(async cooperator => {
             const user = await User.findOne({where: {email: cooperator}})
             if(!user) {
                 //TODO: send invitation email
             }
-            research.addUser(user)
+            research.addUser(user, {through: {role: 'coopreator'}})
         })
+        research.addUser(creator, {through: {role: 'creator'}})
+
         const tags = preference.map(async tag => await Tag.findCreateFind({where: {name: tag}}))
         research.setTags(tags)
-
-
-        const user = await User.findByPk(creator)
-        user.addResearch(research)
 
         return research.id
     }
@@ -80,7 +79,7 @@ class ProjectService extends BaseService {
         }
 
         const { name, reward, headCount, description, status } = research
-        const picture_id = research.getCover()
+        const picture_id = research.getPicture()
         const appointment_id = research.getAppointment()
         const questionnarie_id = research.getQuestionnarie()
         const documents = research.getDocuments().map(document => {
@@ -122,12 +121,13 @@ class ProjectService extends BaseService {
         research.status = status
 
         const { picture_id, appointment_id, questionnarie_id } = researchInfo
-        research.setCover(picture_id)
+        research.setPicture(picture_id)
         research.setAppointment(appointment_id)
         research.setQuestionnarie(questionnarie_id)
 
         const {documents, cooperators, preference} = researchInfo
-        documents.map(document => research.addDocument(document.id))
+        const documents_id = documents.map(document => document.id)
+        research.setDocuments(documents_id)
         cooperators.map(async cooperator => {
             const user = await User.findOne({where: {email: cooperator}})
             if(!user) {
@@ -248,7 +248,7 @@ class ProjectService extends BaseService {
         return questionnaire.id
     }
 
-    async getQuestionnaireInfo(id) {
+    async getQuestionnaireInfo(id) { 
         if(!id) {
             throw new HttpError('InvalidInputError', 'id is required.', 400)
         }

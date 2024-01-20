@@ -6,7 +6,7 @@ import logger from '../utils/logger.js'
 import { HttpError } from '../utils/error.js'
 import { User, Participant, Researcher } from '../models/user.js'
 import { Tag } from '../models/tag.js'
-import { Country, State, Industry, Position, Institute, Title } from '../models/maps.js'
+import { Country, State, Section, Occupation, Institute, Title } from '../models/maps.js'
 
 class UserService extends BaseService {
 
@@ -34,16 +34,16 @@ class UserService extends BaseService {
      */
     async signIn(username, password) {
         if(!username || !password) {
-            return new HttpError('InvalidInputError', 'please enter username and password.', 400)
+            throw new HttpError('InvalidInputError', 'please enter username and password.', 400)
         }
         const user = await User.findOne({ where: { email: username }})
         const passwordCorrect = (user === null
             ? false
-            : bcrypt.compare(password, user.passwordHash)
+            : await bcrypt.compare(password, user.passwordHash)
         )
         
         if (!(user && passwordCorrect)) {
-            return new HttpError('InvalidInputError', 'invalid username or password.', 401)
+            throw new HttpError('InvalidInputError', 'invalid username or password.', 401)
         }
     
         const userForToken = {
@@ -55,24 +55,16 @@ class UserService extends BaseService {
         const token = jwt.sign(
             userForToken,
             process.env.SECRET,
-            '2h',
-            error => {
-                if(error) {
-                    logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
-                    throw(error)
-                }
+            {
+                expiresIn: '2h'
             }
         )
 
         const refreshToken = jwt.sign(
             userForToken,
             process.env.SECRET,
-            '7d',
-            error => {
-                if(error) {
-                    logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
-                    throw(error)
-                }
+            {
+                expiresIn: '7d'
             }
         )
 
@@ -82,6 +74,21 @@ class UserService extends BaseService {
         this._userTokens.push({userForToken, refreshTokenHash})
 
         return { id : user.id, type : user.type, token, refreshToken }
+    }
+
+    async resetPassword(username, password) {
+        if(!username || !password) {
+            throw new HttpError('InvalidInputError', 'please enter username and password.', 400)
+        }
+        const user = User.findOne({ where: { email: username }})
+        if(!user) {
+            throw new HttpError('InvalidInputError', 'invalid username.', 401)
+        }
+
+        const saltRounds = 10
+        const passwordHash = bcrypt.hashSync(password, saltRounds)
+
+        await user.setDataValue('passwordHash', passwordHash)
     }
 
     /**
@@ -118,35 +125,31 @@ class UserService extends BaseService {
             throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
         }
 
-        const userForToken = jwt.verify(
-            token,
+        const userInToken = jwt.verify(
+            refreshToken,
             process.env.SECRET
         )
 
-        const index = this._userTokens.findIndex(obj => obj.userForToken === userForToken)
+        const index = this._userTokens.findIndex(obj => obj.userForToken.id === userInToken.id)
         if(index === -1) {
-            throw new HttpError('JsonWebTokenError', 'user has been logged out.', 401)
-        }
-        if(!bcrypt.compare(refreshToken.concat(token), this._userTokens[index].refreshTokenHash)) {
             throw new HttpError('JsonWebTokenError', 'invalid token.', 401)
+        }
+        if(!await bcrypt.compare(refreshToken.concat(token), this._userTokens[index].refreshTokenHash)) {
+            throw new HttpError('JsonWebTokenError', 'invalid refreshToken.', 401)
         }
 
         const newToken = jwt.sign(
-            userForToken,
+            this._userTokens[index].userForToken,
             process.env.SECRET,
-            '2h',
-            error => {
-                if(error) {
-                    logger.error(`JWT sign failed: ${error.name} ${error.message}.`)
-                    throw(error)
-                }
+            {
+                expiresIn: '2h'
             }
         )
 
         const saltRounds = 10
         const refreshTokenHash = bcrypt.hashSync(refreshToken.concat(newToken), saltRounds)
 
-        Object.assign(this._userTokens[index], refreshTokenHash)
+        this._userTokens[index].refreshTokenHash = refreshTokenHash
 
         return newToken
     }
@@ -169,18 +172,21 @@ class UserService extends BaseService {
             throw new HttpError('InvalidInputError', 'invalid country or state.', 500)
         }
 
-        const { email, password, name, sex, birth} = userInfo
+        const { email, password, firstName, lastName, sex, birth} = userInfo
 
         const saltRounds = 10
         const passwordHash = bcrypt.hashSync(password, saltRounds)
 
-        const user = User.build({
+        const user = await User.create({
             email,
             passwordHash,
-            name,
+            firstName,
+            lastName,
             sex,
             birth,
-            type
+            type,
+            country_id: country_obj.id,
+            state_id: state_obj.id
         })
         if(!user){
             logger.error('create user failed.')
@@ -188,30 +194,23 @@ class UserService extends BaseService {
         }
         
         if (type === 0) {
-            const { industry, position, tags, description } = userInfo
+            const { section, occupation, tags } = userInfo
             const participant = await this._createParticipant(
-                { industry, position, tags, description }
+                { user, section, occupation, tags }
             )
             if(!participant){
+                User.destroy({ where: { id: user.id }, force: true})
                 throw new HttpError('SystemError', 'create user failed.', 500)
             }
-            await user.save()
-            user.setParticipant(participant)
-
         } else if (type === 1) {
-            const { institute, title, links, tags, description } = userInfo
+            const { institute, title, relatedLinks, tags } = userInfo
             const researcher = await this._createResearcher(
-                { institute, title, links, tags, description }
+                { user, institute, title, relatedLinks, tags }
             )
             if(!researcher){
                 throw new HttpError('SystemError', 'create user failed.', 500)
             }
-            await user.save()
-            user.setResearcher(researcher)
         }
-
-        await user.setCountry(country_obj)
-        await user.setState(state_obj)
 
         return true
     }
@@ -229,12 +228,19 @@ class UserService extends BaseService {
         if(!user) {
             throw new HttpError('NotFound', 'user not found', 404)
         }
-        const userInfo = _.omit(user.get(), ['passwordHash', 'type', 'country_id', 'state_id', 'createdAt', 'updatedAt', 'deletedAt'])
+
+        const country_obj = await Country.findByPk(user.country_id)
+        const state_obj = await State.findByPk(user.state_id)
+        const country = country_obj.name
+        const state = state_obj.name
+        let userInfo = Object.assign(user.get(), { country, state })
+
+        userInfo = _.omit(userInfo, ['passwordHash', 'type', 'country_id', 'state_id', 'createdAt', 'updatedAt', 'deletedAt'])
 
         let roleInfo = null
-        if(user.type === 0) {
+        if(user.type === '0') {
             roleInfo = this._getParticipant(id)
-        } else if (user.type  === 1) {
+        } else if (user.type  === '1') {
             roleInfo = this._getResearcher(id)
         }
         if(!roleInfo) {
@@ -288,35 +294,40 @@ class UserService extends BaseService {
             return null
         }
 
-        const { industry, position, tags, description} = participantInfo
-        const industry_obj = await Industry.findOne({where: {name: industry}})
-        const position_obj = await Position.findOne({where: {name: position}})
-        if(!industry_obj.has(position_obj)) {
-            logger.error('Invalid industry and position.')
+        const { user, section, occupation, tags} = participantInfo
+        const section_obj = await Section.findOne({where: {name: section}})
+        const occupation_obj = await Occupation.findOne({where: {name: occupation}})
+        if(!section_obj || !occupation_obj) {
+            logger.error('Invalid section and occupation.')
             return null
         }
-        const tags_pets = tags.pets.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'pets'}}))
-        const tags_medicalHistory = tags.medicalHistory.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'medicalHistory'}}))
-        const tags_other = tags.other.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'other'}}))
-        const tags_obj = tags_pets.concat(tags_medicalHistory).concat(tags_other)
 
         const participant = await Participant.create({
-            description
+            user_id: user.id,
+            section_id: section_obj.id,
+            occupation_id: occupation_obj.id
         })
         if(!participant){
             return null
         }
 
-        await participant.setIndustry(industry_obj)
-        await participant.setPosition(position_obj)
-        await participant.addTags(tags_obj)
+        let tags_list = []
+        tags.pets.forEach(tag => tags_list.push({name: tag, type: 'pets'}))
+        tags.medicalHistory.forEach(tag => tags_list.push({name: tag, type: 'medicalHistory'}))
+        tags.other.forEach(tag => tags_list.push({name: tag, type: 'other'}))
+        const tags_obj_list = []
+        for (let tag of tags_list) {
+            const tag_obj = await Tag.findCreateFind({where: tag})
+            tags_obj_list.push(tag_obj[0])
+        }
+        await participant.setTags(tags_obj_list)
 
         return participant
     }
 
     /**
      * @description: create researcher, private func
-     * @param {*} participantInfo
+     * @param {*} researcherInfo
      * @return {*}
      */
     async _createResearcher(researcherInfo) {
@@ -324,29 +335,34 @@ class UserService extends BaseService {
             return null
         }
 
-        const { institute, title, relatedLinks, tags, description } = researcherInfo
+        const { user, institute, title, relatedLinks, tags } = researcherInfo
         const institute_obj = await Institute.findOne({where: {name: institute}})
         const title_obj = await Title.findOne({where: {name: title}})
-        if(!institute_obj.has(title_obj)) {
+        if(!institute_obj || !title_obj) {
             logger.error('Invalid institute and title.')
             return null 
         }
         const links_row = relatedLinks.join(',')
-        const tags_fields = tags.pets.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'fields'}}))
-        const tags_other = tags.other.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'other'}}))
-        const tags_obj = tags_fields.concat(tags_other)
         
         const researcher = await Researcher.create({
-            relatedLinks: links_row,
-            description
+            user_id: user.id,
+            institute_id: institute_obj.id,
+            title_id: title_obj.id,
+            relatedLinks: links_row
         })
         if(!researcher){
             return null 
         }
 
-        await researcher.setInstitute(institute_obj)
-        await researcher.setTitle(title_obj)
-        await researcher.setTags(tags_obj)
+        let tags_list = []
+        tags.researchFields.forEach(tag => tags_list.push({ name: tag, type: 'researchFields'}))
+        tags.other.forEach(tag => tags_list.push({ name: tag, type: 'other'}))
+        let tags_obj_list = []
+        for (let tag of tags_list) {
+            const tag_obj = await Tag.findCreateFind({ where: tag})
+            tags_obj_list.push(tag_obj[0])
+        }
+        await researcher.setTags(tags_obj_list)
 
         return researcher
     }
@@ -361,35 +377,34 @@ class UserService extends BaseService {
             return null
         }
 
-        const participant = await Participant.findOne({ where : { user_id : id }})
+        const participant = await Participant.findOne({ where: { user_id: id }})
         if(!participant) {
             return null
         }
 
         const tags_obj = participant.getTags()
-        const pets = tags_obj.map(tag => {
+        let pets = []
+        let medicalHistory = []
+        let other = []
+        tags_obj.forEach(tag => {
             if(tag.type === 'pets') {
-                return tag.name
+                pets.push(tag.name)
+            } else if(tag.type === 'medicalHistory') {
+                medicalHistory.push(tag.name)
+            } else if(tag.type === 'other') {
+                other.push(tag.name)
             }
         })
-        const medicalHistory = tags_obj.map(tag => {
-            if(tag.type === 'medicalHistory') {
-                return tag.name
-            }
-        })
-        const other = tags_obj.map(tag => {
-            if(tag.type === 'other') {
-                return tag.name
-            }
-        })
-        const tags = { pets: pets, medicalHistory: medicalHistory, other: other}
+        const tags = { pets, medicalHistory, other}
 
-        const industry = participant.getIndustry().name
-        const position = participant.getPosition().name
+        const section_obj = await Section.findByPk(participant.section_id)
+        const occupation_obj = await Occupation.findByPk(participant.occupation_id)
+        const section = section_obj.name
+        const occupation = occupation_obj.name
 
-        const newParticipant = Object.assign(participant.get(), {tags, industry, position})
+        const participantInfo = Object.assign(participant.get(), { tags, section, occupation })
 
-        return _.omit(newParticipant, ['id', 'user_id', 'industry_id', 'position_id', 'createdAt', 'updatedAt', 'deletedAt'])
+        return _.omit(participantInfo, ['id', 'user_id', 'section_id', 'occupation_id', 'createdAt', 'updatedAt', 'deletedAt'])
     }
 
     /**
@@ -408,25 +423,26 @@ class UserService extends BaseService {
         }
 
         const tags_obj = researcher.getTags()
-        const fields = tags_obj.map(tag => {
+        let fields = []
+        let other = []
+        tags_obj.forEach(tag => {
             if(tag.type === 'fields') {
-                return tag.name
+                fields.push(tag.name)
+            } else if(tag.type === 'other') {
+                other.push(tag.name)
             }
         })
-        const other = tags_obj.map(tag => {
-            if(tag.type === 'other') {
-                return tag.name
-            }
-        })
-        const tags = { fields: fields, other: other}
+        const tags = { fields, other}
 
-        const institute = researcher.getInstitute().name
-        const title = researcher.getTitle().name
+        const institute_obj = await Institute.findByPk(researcher.institute_id)
+        const title_obj = await Title.findByPk(researcher.title_id)
+        const institute = institute_obj.name
+        const title = title_obj.name
         const relatedLinks = researcher.relatedLinks.split(',')
         
-        const newResearcher = Object.assign(researcher.get(), {tags, institute, title, relatedLinks})
+        const researcherInfo = Object.assign(researcher.get(), {tags, institute, title, relatedLinks})
 
-        return _.omit(newResearcher, ['id','user_id', 'institute_id', 'title_id', 'createdAt', 'updatedAt', 'deletedAt'])
+        return _.omit(researcherInfo, ['id','user_id', 'institute_id', 'title_id', 'createdAt', 'updatedAt', 'deletedAt'])
     }
 
     /**
@@ -441,29 +457,29 @@ class UserService extends BaseService {
         
         const participant = await Participant.findOne({ where: { user_id: id }})
         if(!participant) {
-            logger.error('Invalid participant id.')
             return false
         }
         
-        const {industry, position, tags, description} = userInfo
+        const {section, occupation, tags, description} = userInfo
 
-        const industry_obj = await Industry.findOne({where: {name: industry}})
-        const position_obj = await Position.findOne({where: {name: position}})
-        if(!industry_obj.has(position_obj)) {
-            logger.error('Invalid industry and position.')
+        const section_obj = await Section.findOne({where: {name: section}})
+        const occupation_obj = await Occupation.findOne({where: {name: occupation}})
+        if(!section_obj.has(occupation_obj)) {
             return false 
         }
         
-        const tags_pets = tags.pets.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'pets'}}))
-        const tags_medicalHistory = tags.medicalHistory.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'medicalHistory'}}))
-        const tags_other = tags.other.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'other'}}))
-        const tags_obj = tags_pets.concat(tags_medicalHistory).concat(tags_other)
+        let tags_list = []
+        tags.pets.forEach(tag => tags_list.push({name: tag, type: 'pets'}))
+        tags.medicalHistory.forEach(tag => tags_list.push({name: tag, type: 'medicalHistory'}))
+        tags.other.forEach(tag => tags_list.push({name: tag, type: 'other'}))
+        const tags_obj_list = []
+        for (let tag of tags_list) {
+            const tag_obj = await Tag.findCreateFind({where: tag})
+            tags_obj_list.push(tag_obj[0])
+        }
+        await participant.setTags(tags_obj_list)
 
-        await participant.setIndustry(industry_obj)
-        await participant.setPosition(position_obj)
-        await participant.setTags(tags_obj)
-
-        participant.set({ description })
+        participant.set({ section_id: section_obj.id, occupation_id: occupation_obj.id, description })
         await participant.save()
         
         return true
@@ -481,29 +497,29 @@ class UserService extends BaseService {
 
         const researcher = await Researcher.findOne({ where: { user_id: id }})
         if(!researcher) {
-            logger.error('Invalid researcher id.')
             return false
         }
 
         const {institute, title, relatedLinks, tags, description} = userInfo
 
-        const institute_obj = await Institute.findOne({where: {name: institute}})
-        const title_obj = await Title.findOne({where: {name: title}})
+        const institute_obj = await Institute.findOne({ where: { name: institute }})
+        const title_obj = await Title.findOne({ where: { name: title }})
         if(!institute_obj.has(title_obj)) {
-            logger.error('Invalid institute and title.')
-            return false 
+            return false
         }
         
-        const tags_fields = tags.fields.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'fields'}}))
-        const tags_other = tags.other.map(async tag => await Tag.findCreateFind({where: {name: tag, type: 'other'}}))
-        const tags_obj = tags_fields.concat(tags_other)
-
-        await researcher.setInstitute(institute_obj)
-        await researcher.setTitle(title_obj)
-        await researcher.setTags(tags_obj)
+        let tags_list = []
+        tags.researchFields.forEach(tag => tags_list.push({ name: tag, type: 'researchFields'}))
+        tags.other.forEach(tag => tags_list.push({ name: tag, type: 'other'}))
+        let tags_obj_list = []
+        for (let tag of tags_list) {
+            const tag_obj = await Tag.findCreateFind({ where: tag})
+            tags_obj_list.push(tag_obj[0])
+        }
+        await researcher.setTags(tags_obj_list)
 
         const links_row = relatedLinks.join(',')
-        researcher.set({ description, relatedLinks: links_row })
+        researcher.set({ institute_id: institute_obj.id, title_id: title_obj.id, relatedLinks: links_row, description })
         await researcher.save()
         
         return true

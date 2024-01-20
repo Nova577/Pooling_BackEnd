@@ -5,6 +5,7 @@ const projectRouter = express.Router()
 
 projectRouter.post('/research', async ( request, response, next ) => {
     const researchInfo = request.body
+    researchInfo.creator = request.user.id
     try {
         const research_id = await projectService.createResearch(request.user.id, researchInfo)
         response
@@ -43,7 +44,7 @@ projectRouter.put('/research/:id', async ( request, response, next ) => {
 projectRouter.post('/appointment', async ( request, response, next ) => {
     const appointmentInfo = request.body
     try {
-        const appointment_id = await projectService.createAppointment(request.user.id, appointmentInfo)
+        const appointment_id = await projectService.createAppointment(appointmentInfo)
         response
             .status(200)
             .send({ code : 0 , data : { id: appointment_id }})
@@ -80,7 +81,7 @@ projectRouter.put('/appointment/:id', async ( request, response, next ) => {
 projectRouter.post('/questionnaire', async ( request, response, next ) => {
     const questionnaireInfo = request.body
     try {
-        const questionnaire_id = await projectService.createQuestionnaire(request.user.id, questionnaireInfo)
+        const questionnaire_id = await projectService.createQuestionnaire(questionnaireInfo)
         response
             .status(200)
             .send({ code : 0 , data : { id: questionnaire_id }})
