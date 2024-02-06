@@ -54,7 +54,7 @@ const userExtractor = async (request, response, next) => {
         request.token,
         process.env.SECRET
     )
-    Object.assign(request, {user: decoded})
+    Object.assign(request.body, {operator: decoded})
     next()
 }
 

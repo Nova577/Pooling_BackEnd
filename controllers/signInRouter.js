@@ -9,10 +9,11 @@ signInRouter.post('/', async ( request, response, next ) => {
         const { id, type, token, refreshToken } = await userService.signIn(userName, password)
         response
             .status(200)
-            .send({ code : 0 , data : { id, type, token, refreshToken }})
+            .send({ code: 0 , data: { id, type, token, refreshToken }})
     } catch (error) {
         next(error)
     }
 })
+
 
 export default signInRouter

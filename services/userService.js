@@ -13,12 +13,13 @@ class UserService extends BaseService {
     constructor() {
         super()
         this._userTokens = []
+        this._codeList = []
     }
 
     /**
      * @description: service class should be singler mode
      * @return {*}
-     */    
+     */
     static getInstance() {
         if(!this._instance){
             this._instance = new UserService()
@@ -60,18 +61,20 @@ class UserService extends BaseService {
             }
         )
 
-        const refreshToken = jwt.sign(
-            userForToken,
-            process.env.SECRET,
-            {
-                expiresIn: '7d'
-            }
-        )
+        const time = new Date().getTime().toString()
 
         const saltRounds = 10
-        const refreshTokenHash = bcrypt.hashSync(refreshToken.concat(token), saltRounds)
+        const refreshToken = bcrypt.hashSync(time.concat(token), saltRounds)
 
-        this._userTokens.push({userForToken, refreshTokenHash})
+        this._userTokens.push({userForToken, refreshToken})
+
+        //remove refreshToken from list after 7 days
+        setTimeout(() => {
+            const index = this._userTokens.findIndex(obj => obj.refreshToken === refreshToken)
+            if(index !== -1) {
+                this._userTokens.splice(index, 1)
+            }
+        }, 604800000)
 
         return { id : user.id, type : user.type, token, refreshToken }
     }
@@ -80,6 +83,12 @@ class UserService extends BaseService {
         if(!username || !password) {
             throw new HttpError('InvalidInputError', 'please enter username and password.', 400)
         }
+
+        const index = this._codeList.findIndex(obj => obj.email === username)
+        if(index === -1 || this._codeList[index].code !== 'checked') {
+            throw new HttpError('InvalidInputError', 'please check code first.', 400)
+        }
+        
         const user = User.findOne({ where: { email: username }})
         if(!user) {
             throw new HttpError('InvalidInputError', 'invalid username.', 401)
@@ -120,22 +129,14 @@ class UserService extends BaseService {
      * @param {*} refreshToken
      * @return {*}
      */
-    async refreshToken(token, refreshToken) {
-        if(!token || !refreshToken) {
+    async refreshToken(refreshToken) {
+        if(!refreshToken) {
             throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
         }
 
-        const userInToken = jwt.verify(
-            refreshToken,
-            process.env.SECRET
-        )
-
-        const index = this._userTokens.findIndex(obj => obj.userForToken.id === userInToken.id)
+        const index = this._userTokens.findIndex(obj => obj.refreshToken === refreshToken)
         if(index === -1) {
-            throw new HttpError('JsonWebTokenError', 'invalid token.', 401)
-        }
-        if(!await bcrypt.compare(refreshToken.concat(token), this._userTokens[index].refreshTokenHash)) {
-            throw new HttpError('JsonWebTokenError', 'invalid refreshToken.', 401)
+            throw new HttpError('JsonWebTokenError', 'invalid token.', 400)
         }
 
         const newToken = jwt.sign(
@@ -146,12 +147,51 @@ class UserService extends BaseService {
             }
         )
 
+        const time = new Date().getTime().toString()
         const saltRounds = 10
-        const refreshTokenHash = bcrypt.hashSync(refreshToken.concat(newToken), saltRounds)
+        const newRefreshToken = bcrypt.hashSync(time.concat(newToken), saltRounds)
 
-        this._userTokens[index].refreshTokenHash = refreshTokenHash
+        this._userTokens[index].refreshToken = newRefreshToken
 
         return newToken
+    }
+
+    async sendCode(type, email) {
+        if(!type || !email) {
+            throw new HttpError('InvalidInputError', 'please enter type and email.', 400)
+        }
+        const participant =  await Participant.findOne({ where: { email }})
+        const researcher = await Researcher.findOne({ where: { email }})
+        if(type === 'signUp' && (participant || researcher)) {
+            throw new HttpError('InvalidInputError', 'email already exist.', 400)
+        } else if (type === 'resetPassword' && (!participant && !researcher)) {
+            throw new HttpError('NotFound', 'user not found', 404)
+        } else {     
+            const code = Math.random().toString().slice(-6)
+            // TODO: send code to email
+            this._codeList.push({email, code})
+            //remove code from list after 15 minutes
+            setTimeout(() => {
+                const index = this._codeList.findIndex(obj => obj.email === email)
+                if(index !== -1) {
+                    this._codeList.splice(index, 1)
+                }
+            }, 900000)
+            return true
+        }
+    }
+
+    async checkCode(email, code) {
+        if(!email || !code) {
+            throw new HttpError('InvalidInputError', 'please enter email and code.', 400)
+        }
+
+        const index = this._codeList.findIndex(obj => obj.email === email)
+        if(index === -1 || this._codeList[index].code !== code) {
+            throw new HttpError('InvalidInputError', 'code expired or invalid code.', 400)
+        }
+        this.codeList.splice(index, 1, {email, code: 'checked'})
+        return true
     }
 
     /**
@@ -161,11 +201,16 @@ class UserService extends BaseService {
      * @return {*}
      */
     async createUser(userInfo, type) {
-        if(!userInfo) {
+        if(!userInfo || !type) {
             throw new HttpError('InvalidInputError', 'please enter user info.', 400)
         }
 
-        const {country, state} = userInfo
+        const index = this._codeList.findIndex(obj => obj.email === userInfo.email)
+        if(index === -1 || this._codeList[index].code !== 'checked') {
+            throw new HttpError('InvalidInputError', 'please check code first.', 400)
+        }
+        
+        const { country, state } = userInfo
         const country_obj = await Country.findOne({ where: { name: country }})
         const state_obj = await State.findOne({ where: { name: state }})
         if(!country_obj || !state_obj) {
@@ -208,6 +253,7 @@ class UserService extends BaseService {
                 { user, institute, title, relatedLinks, tags }
             )
             if(!researcher){
+                User.destroy({ where: { id: user.id }, force: true})
                 throw new HttpError('SystemError', 'create user failed.', 500)
             }
         }
@@ -239,15 +285,16 @@ class UserService extends BaseService {
 
         let roleInfo = null
         if(user.type === '0') {
-            roleInfo = this._getParticipant(id)
+            roleInfo = await this._getParticipant(id)
         } else if (user.type  === '1') {
-            roleInfo = this._getResearcher(id)
+            roleInfo = await this._getResearcher(id)
         }
         if(!roleInfo) {
             throw new HttpError('NotFound', 'user info lost', 404)
         }
 
-        return Object.assign(userInfo, roleInfo).toJSON()
+
+        return Object.assign(userInfo, roleInfo)
     }
 
     /**
@@ -256,27 +303,26 @@ class UserService extends BaseService {
      * @param {*} userInfo
      * @return {*}
      */
-    async updateUserInfo(id, userInfo) {
+    async updateUserInfo(id, userInfo, operator) {
         if(!id || !userInfo) {
             throw new HttpError('InvalidInputError', 'please enter user info.', 400)
         }
-        
+        if(id !== operator) {
+            throw new HttpError('PermissonDenied', 'you have no permission.', 403)
+        }
+
         const user = await User.findByPk(id)
         if(!user) {
             throw new HttpError('NotFound', 'user not found', 404)
         }
 
         let result = false
-        switch(user.type) {
-        case 0:
+        if(user.type === '0') {
             result = this._updateParticipant(id, userInfo)
-            break
-        case 1:
+        } else if (user.type  === '1') {
             result = this._updateResearcher(id, userInfo)
-            break
-        default:
-            break
         }
+
         if(!result){
             throw new HttpError('SystemError', 'update user failed.', 500)
         }
@@ -382,7 +428,7 @@ class UserService extends BaseService {
             return null
         }
 
-        const tags_obj = participant.getTags()
+        const tags_obj = await participant.getTags()
         let pets = []
         let medicalHistory = []
         let other = []
@@ -422,7 +468,7 @@ class UserService extends BaseService {
             return null
         }
 
-        const tags_obj = researcher.getTags()
+        const tags_obj = await researcher.getTags()
         let fields = []
         let other = []
         tags_obj.forEach(tag => {
@@ -440,7 +486,7 @@ class UserService extends BaseService {
         const title = title_obj.name
         const relatedLinks = researcher.relatedLinks.split(',')
         
-        const researcherInfo = Object.assign(researcher.get(), {tags, institute, title, relatedLinks})
+        const researcherInfo = Object.assign(researcher.get, {tags, institute, title, relatedLinks})
 
         return _.omit(researcherInfo, ['id','user_id', 'institute_id', 'title_id', 'createdAt', 'updatedAt', 'deletedAt'])
     }

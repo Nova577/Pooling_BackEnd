@@ -63,11 +63,11 @@ const userSchema = {
 }
 class User extends Model {
     static associate(models) {
-        this.hasMany(models.Picture, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasMany(models.Document, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Participant, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Researcher, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasMany(models.Picture, {foreignKey: 'owner_id'})
+        this.hasOne(models.Picture, {as: 'Avatar', constraints: false, foreignKey: 'owner_id'})
+        this.hasMany(models.Document, {foreignKey: 'owner_id'})
+        this.hasOne(models.Participant, {foreignKey: 'user_id'})
+        this.hasOne(models.Researcher, {foreignKey: 'user_id'})
     }
 }
 
@@ -102,7 +102,8 @@ const participantSchema = {
         }
     },
     description: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        defaultValue: ''
     }
 }
 class Participant extends Model {
@@ -146,7 +147,8 @@ const researcherSchema = {
         allowNull: true
     },
     description: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        defaultValue: ''
     }
 }
 class Researcher extends Model {

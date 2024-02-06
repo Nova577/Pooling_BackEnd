@@ -16,7 +16,7 @@ const documentSchema = {
         type: DataTypes.STRING,
         allowNull: false
     },
-    owner_id: {
+    user_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
@@ -25,16 +25,16 @@ const documentSchema = {
         }
     },
     url: {
-        type: DataTypes.VIRTUAL(DataTypes.STRING, ['owner_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['user_id','id', 'format']),
         allowNull: false,
         get() {
-            return `/${this.getDataValue('owner_id')}/documents/${this.getDataValue('id')}.${this.getDataValue('format')}`
+            return `/files/${this.getDataValue('user_id')}/documents/${this.getDataValue('id')}.${this.getDataValue('format')}`
         }
     }
 }
 class Document extends Model {
     static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade', constraints: false})
+        this.belongsTo(models.User, {foreignKey: 'user_id', constraints: false})
     }
 }
 
@@ -53,7 +53,7 @@ const pictureSchema = {
         type: DataTypes.STRING,
         allowNull: false
     },
-    owner_id: { 
+    user_id: { 
         type: DataTypes.UUID,
         allowNull: false,
         references: {
@@ -63,16 +63,16 @@ const pictureSchema = {
         }
     },
     url: {
-        type: DataTypes.VIRTUAL(DataTypes.STRING, ['owner_id','id', 'format']),
+        type: DataTypes.VIRTUAL(DataTypes.STRING, ['user_id','id', 'format']),
         allowNull: false,
         get() {
-            return `/${this.getDataValue('owner_id')}/pictures/${this.getDataValue('id')}.${this.getDataValue('format')}`
+            return `/files/${this.getDataValue('user_id')}/pictures/${this.getDataValue('id')}.${this.getDataValue('format')}`
         }
     }
 }
 class Picture extends Model {
     static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'owner_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.belongsTo(models.User, {foreignKey: 'owner_id'})
     }
 }
 

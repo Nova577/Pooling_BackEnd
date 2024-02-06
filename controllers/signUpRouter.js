@@ -9,7 +9,7 @@ signUpRouter.post('/participant', async ( request, response, next ) => {
         await userService.createUser(participantInfo, 0)
         response
             .status(200)
-            .send({ code : 0 , message : 'success' })
+            .send({ code: 0 , message: 'success' })
     } catch (error) {
         next(error)
     }
@@ -21,7 +21,7 @@ signUpRouter.post('/researcher', async ( request, response, next ) => {
         await userService.createUser(researcherInfo, 1)
         response
             .status(200)
-            .send({ code : 0 , message : 'success' })
+            .send({ code: 0 , message: 'success' })
     } catch (error) {
         next(error)
     }
@@ -33,7 +33,7 @@ signUpRouter.post('/sendCode', async ( request, response, next ) => {
         await userService.sendCode('signUp', username)
         response
             .status(200)
-            .send({ code : 0 , message : 'success' })
+            .send({ code: 0 , message: 'success' })
     } catch (error) {
         next(error)
     }
@@ -45,7 +45,7 @@ signUpRouter.post('/checkCode', async ( request, response, next ) => {
         await userService.checkCode(username, code)
         response
             .status(200)
-            .send({ code : 0 , message : 'success' })
+            .send({ code: 0 , message: 'success' })
     } catch (error) {
         next(error)
     }

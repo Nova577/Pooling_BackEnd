@@ -54,7 +54,7 @@ content-type: application/json
   "password": "123456"
 }
 
-### SignIn
+### Participant SignIn
 POST http://localhost:3003/api/signIn
 Content-Type: application/json
 
@@ -63,12 +63,25 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### SignIn Response    
-"id": "3ae9178d-ae99-42ca-80e4-e4946c3174f3",
-    "type": "0",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNTc3NzE3OX0.QhYc0077SgFHtJj3Dy5d5RY36QaSa1gE_DLQBcRJYSE",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNjM3NDc3OX0.Qh_z90dpA2jMeyKEFAEoj5Omgn-sAqbxeaCqbUqDhtc"
+### Researcher SignIn
+POST http://localhost:3003/api/signIn
+Content-Type: application/json
 
+{
+  "userName": "456@example.com",
+  "password": "123456"
+}
+
+### SignIn Response    
+    "id": "3ae9178d-ae99-42ca-80e4-e4946c3174f3",
+    "type": "0",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU5MTEwMDQsImV4cCI6MTcwNTkxODIwNH0.1QDcC6lxgJhS3ASVHaZrGddZLoUfqllm02wIDC9yhuw",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU5MTEwMDQsImV4cCI6MTcwNjUxNTgwNH0.cNl9htZmzlMWNWC-CEm0PbfnOEasjC6tEqP4lTvmM-0"
+
+    "id": "2ad1f6ac-66cf-4848-a407-daebfbcdc0f6",
+    "type": "1",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJhZDFmNmFjLTY2Y2YtNDg0OC1hNDA3LWRhZWJmYmNkYzBmNiIsImVtYWlsIjoiNDU2QGV4YW1wbGUuY29tIiwidHlwZSI6IjEiLCJpYXQiOjE3MDU5MTYwMjksImV4cCI6MTcwNTkyMzIyOX0.R-__gBU5H3YT5VIqiy8GE_qmJ7hg2RHZpwguQRUgPCs",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJhZDFmNmFjLTY2Y2YtNDg0OC1hNDA3LWRhZWJmYmNkYzBmNiIsImVtYWlsIjoiNDU2QGV4YW1wbGUuY29tIiwidHlwZSI6IjEiLCJpYXQiOjE3MDU5MTYwMjksImV4cCI6MTcwNjUyMDgyOX0.qWbaJw_aegFtY31VEq7aoV0uztaPewAbog6PCfVdARo"
 ### SignOut
 POST http://localhost:3003/api/auth/signOut
 authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImExMmRmMmIyLTZmNGItNDcxYS1hNmEzLTgwZGM5ZmE5YjcwMiIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njc2MzksImV4cCI6MTcwNTc3NDgzOX0.WdcLIu9EfqaPcIc6QfyFYlTUm9J2bjxzOTkZWNQj1V4
@@ -86,17 +99,53 @@ authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlmMzM0YjA1L
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNjOWJhNDdiLTBkMWYtNGZiOS1iYTM1LWVlYWIzZWYyMDljZSIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDUwNzgxNjMsImV4cCI6MTcwNTA4NTM2M30.TkbgxcUOXHBCfnZ-ADXl1oHLoSzTk4Yh0nE0OQ_5jlE"
 
 ### Get Participant
-GET http://localhost:3003/api/participant/3ae9178d-ae99-42ca-80e4-e4946c3174f3
-authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhZTkxNzhkLWFlOTktNDJjYS04MGU0LWU0OTQ2YzMxNzRmMyIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU3Njk5NzksImV4cCI6MTcwNTc3NzE3OX0.QhYc0077SgFHtJj3Dy5d5RY36QaSa1gE_DLQBcRJYSE
+GET http://localhost:3003/api/participant/d32ea69c-c546-4c57-b780-7e0b6c45e5e6
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQzMmVhNjljLWM1NDYtNGM1Ny1iNzgwLTdlMGI2YzQ1ZTVlNiIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU5MTYzMTgsImV4cCI6MTcwNTkyMzUxOH0.WT7HdsMJn1Fwh-LA7Eo-6oQehgQ6yLZDxIa6oslXFaw
 
 ### Update Participant
-PUT http://localhost:3003/api/participant/12131252354
+PUT http://localhost:3003/api/participant/d32ea69c-c546-4c57-b780-7e0b6c45e5e6
+authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQzMmVhNjljLWM1NDYtNGM1Ny1iNzgwLTdlMGI2YzQ1ZTVlNiIsImVtYWlsIjoiMTIzQGV4YW1wbGUuY29tIiwidHlwZSI6IjAiLCJpYXQiOjE3MDU5MTYzMTgsImV4cCI6MTcwNTkyMzUxOH0.WT7HdsMJn1Fwh-LA7Eo-6oQehgQ6yLZDxIa6oslXFaw
+
+{
+  "section": "Manufacturing",
+  "occupation": "Engineering, Science and Transport Professionals",
+  "tags": {
+    "pets": [
+      "012"
+    ],
+    "medicalHistory": [
+      "123"
+    ],
+    "other": [
+      "134"
+    ]
+  },
+  "description": "I am a good person"
+}
 
 ### Get Researcher
-GET http://localhost:3003/api/researcher/12131252354
- 
+GET http://localhost:3003/api/researcher/2ad1f6ac-66cf-4848-a407-daebfbcdc0f6
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJhZDFmNmFjLTY2Y2YtNDg0OC1hNDA3LWRhZWJmYmNkYzBmNiIsImVtYWlsIjoiNDU2QGV4YW1wbGUuY29tIiwidHlwZSI6IjEiLCJpYXQiOjE3MDU5MTYwMjksImV4cCI6MTcwNTkyMzIyOX0.R-__gBU5H3YT5VIqiy8GE_qmJ7hg2RHZpwguQRUgPCs
+
 ### Update Researcher
-PUT http://localhost:3003/api/researcher/12131252354
+PUT http://localhost:3003/api/researcher/2ad1f6ac-66cf-4848-a407-daebfbcdc0f6
+
+{
+  "institute": "University of Oxford",
+  "title": "Professor",
+  "tags": {
+    "researchFields": [
+      "012"
+    ],
+    "other": [
+      "134"
+    ]
+  },
+  "relatedLinks" : [
+    "https://www.google.com"
+  ],
+  "description": "I am a good person"
+}
 
 ### Create Research
 POST http://localhost:3003/api/research

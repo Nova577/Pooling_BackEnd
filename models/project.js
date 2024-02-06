@@ -27,12 +27,21 @@ const researchSchema = {
         type: DataTypes.STRING,
         allowNull: false
     },
-}
-class Research extends Model {
-    static associate(models) {
-        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'restrict'})
-        this.hasOne(models.Appointment, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
-        this.hasOne(models.Questionnaire, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    appointment_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+            model: Appointment,
+            key: 'id'
+        }
+    },
+    questionnaire_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+            model: Questionnaire,
+            key: 'id'
+        }
     }
 }
 
@@ -67,11 +76,6 @@ const appointmentSchema = {
         allowNull: false
     }
 }
-class Appointment extends Model {
-    static associate(models) {
-        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
-    }
-}
 
 const questionnaireSchema = {
     id: {
@@ -95,15 +99,17 @@ const questionnaireSchema = {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    status: {
-        //0: draft, 1: published
+    description: {
         type: DataTypes.STRING,
         allowNull: false
-    }
-}
-class Questionnaire extends Model {
-    static associate(models) {
-        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    },
+    essayNumber:  {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    choiceNumber: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }
 
@@ -121,10 +127,13 @@ const eassyQuestionSchema = {
         type: DataTypes.STRING,
         allowNull: false
     },
-}
-class EassyQuestion extends Model {
-    static associate(models) {
-        this.belongsTo(models.Questionnaire, {foreignKey: 'questionnaire_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    questionnaire_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: Questionnaire,
+            key: 'id'
+        }
     }
 }
 
@@ -149,6 +158,36 @@ const choiceQuestionSchema = {
     choice:  {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    questionnaire_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: Questionnaire,
+            key: 'id'
+        }
+    }
+}
+class Research extends Model {
+    static associate(models) {
+        this.belongsTo(models.User, {foreignKey: 'user_id', onUpdate: 'cascade', onDelete: 'restrict'})
+        this.hasOne(models.Appointment, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+        this.hasOne(models.Questionnaire, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    }
+}
+class Appointment extends Model {
+    static associate(models) {
+        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    }
+}
+class Questionnaire extends Model {
+    static associate(models) {
+        this.belongsTo(models.Research, {foreignKey: 'research_id', onUpdate: 'cascade', onDelete: 'cascade'})
+    }
+}
+class EassyQuestion extends Model {
+    static associate(models) {
+        this.belongsTo(models.Questionnaire, {foreignKey: 'questionnaire_id', onUpdate: 'cascade', onDelete: 'cascade'})
     }
 }
 class ChoiceQuestion extends Model {

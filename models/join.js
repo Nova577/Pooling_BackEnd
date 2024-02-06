@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize'
 import { User, Participant, Researcher } from './user.js'
-import { Research } from './project.js'
+import { Research, EassyQuestion, ChoiceQuestion } from './project.js'
 import { Tag } from './tag.js'
 import { Document, Picture } from './file.js'
 
@@ -24,10 +24,25 @@ const participantTagSchema = {}
 
 const researcherTagSchema = {}
 
-const researchDocumentSchema = {
-}
+const researchDocumentSchema = {}
 
 const researchPictureSchema = {}
+
+const participantResearchSchema = {}
+
+const eassayAnswerSchema = {
+    answer: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+}
+
+const choiceAnswerSchema = {
+    answer: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
+}
 
 function joinInit(sequelize) {
     const CooperationGroup = sequelize.define('CooperationGroup', cooperationGroupSchema)
@@ -53,6 +68,18 @@ function joinInit(sequelize) {
     const ResearchPicture = sequelize.define('ResearchPicture', researchPictureSchema)
     Research.belongsToMany(Picture, { through: ResearchPicture })
     Picture.belongsToMany(Research, { through: ResearchPicture })
+
+    const ParticipantResearch = sequelize.define('ParticipantResearch', participantResearchSchema)
+    Participant.belongsToMany(Research, { through: ParticipantResearch })
+    Research.belongsToMany(Participant, { through: ParticipantResearch })
+
+    const EassyAnswer = sequelize.define('EassyAnswer', eassayAnswerSchema)
+    Participant.belongsToMany(EassyQuestion, { through: EassyAnswer })
+    EassyQuestion.belongsToMany(Participant, { through: EassyAnswer })
+
+    const ChoiceAnswer = sequelize.define('ChoiceAnswer', choiceAnswerSchema)
+    Participant.belongsToMany(ChoiceQuestion, { through: ChoiceAnswer })
+    ChoiceQuestion.belongsToMany(Participant, { through: ChoiceAnswer })
 }
 
 export {
