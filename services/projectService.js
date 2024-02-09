@@ -1,5 +1,7 @@
 //import _ from 'lodash'
 import BaseService from './baseService.js'
+import messageService from './messageService.js'
+import userService from './userService.js'
 //import logger from '../utils/logger.js'
 import { HttpError } from '../utils/error.js'
 import { User, Participant } from '../models/user.js'
@@ -51,12 +53,19 @@ class ProjectService extends BaseService {
         await research.setPicture(picture_id)
         const documents_id = documents.map(document => document.id)
         await research.setDocuments(documents_id)
+
         cooperators.map(async cooperator => {
             const user = await User.findOne({where: {email: cooperator}})
             if(!user) {
-                //TODO: send invitation email and add it to wait list
+                //send invitation email and add it to wait list
+                const sendInfo = messageService.sendEmail('account@pooling.tools', cooperator, 'Invitation Information', 'You have been invited to join the research:', name, ', please sign up and join us: www.pooling.tools')
+                if(!sendInfo.messageId) {
+                    //TODO: log error and send message
+                }
+                userService.addToWaitList(cooperator, research.id)
+            } else {
+                await research.addUser(user, {through: {role: 'coopreator'}})
             }
-            await research.addUser(user, {through: {role: 'coopreator'}})
         })
         await research.addUser(creator, {through: {role: 'creator'}})
 
@@ -134,13 +143,29 @@ class ProjectService extends BaseService {
         await research.setPicture(picture_id)
         const documents_id = documents.map(document => document.id)
         await research.setDocuments(documents_id)
+
+        const old_cooperaters_obj = research.getUsers()
+        old_cooperaters_obj.map(async cooperator => {
+            if(!cooperators.includes(cooperator.email)) {
+                await research.removeUser(cooperator)
+            } else {
+                cooperators.splice(cooperators.indexOf(cooperator.email), 1)
+            }
+        })
         cooperators.map(async cooperator => {
             const user = await User.findOne({where: {email: cooperator}})
             if(!user) {
-                //TODO: send invitation email
+                //send invitation email and add it to wait list
+                const sendInfo = messageService.sendEmail('account@pooling.tools', cooperator, 'Invitation Information', 'You have been invited to join the research:', name, ', please sign up and join us: www.pooling.tools')
+                if(!sendInfo.messageId) {
+                    //TODO: log error and send message
+                }
+                userService.addToWaitList(cooperator, research.id)
+            } else {
+                await research.addUser(user, {through: {role: 'coopreator'}})
             }
-            await research.addUser(user)
         })
+
         const tags = preference.map(async tag => await Tag.findCreateFind({where: {name: tag}}))
         await research.setTags(tags)
 

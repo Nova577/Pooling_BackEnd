@@ -14,6 +14,7 @@ class UserService extends BaseService {
         super()
         this._userTokens = []
         this._codeList = []
+        this._waitList = []
     }
 
     /**
@@ -77,6 +78,22 @@ class UserService extends BaseService {
         }, 604800000)
 
         return { id : user.id, type : user.type, token, refreshToken }
+    }
+
+    addToWaitList(email, research_id) {
+        if(!email) {
+            throw new HttpError('InvalidInputError', 'please enter email.', 400)
+        }
+        const index = this._waitList.findIndex(obj => obj.email === email)
+        if(index !== -1) {
+            const waitInfo = {
+                email,
+                researches: [research_id]
+            }
+            this._waitList.push(waitInfo)
+        } else if(!this._waitList[index].researches.includes(research_id)){
+            this._waitList[index].researches.push(research_id)
+        }
     }
 
     async resetPassword(username, password) {
