@@ -2,9 +2,11 @@ import _ from 'lodash'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import BaseService from './baseService.js'
+import messageService from './messageService.js'
 import logger from '../utils/logger.js'
 import { HttpError } from '../utils/error.js'
 import { User, Participant, Researcher } from '../models/user.js'
+import { Research } from '../models/project.js'
 import { Tag } from '../models/tag.js'
 import { Country, State, Section, Occupation, Institute, Title } from '../models/maps.js'
 
@@ -183,9 +185,12 @@ class UserService extends BaseService {
             throw new HttpError('InvalidInputError', 'email already exist.', 400)
         } else if (type === 'resetPassword' && (!participant && !researcher)) {
             throw new HttpError('NotFound', 'user not found', 404)
-        } else {     
+        } else {
             const code = Math.random().toString().slice(-6)
-            // TODO: send code to email
+            const sendInfo = messageService.sendEmail('account@pooling.tools', email, 'Confirm Information', 'Your email check code is: ' + code + '. It will expire in 15 minutes.')
+            if(!sendInfo.messageId) {
+                throw new HttpError('SystemError', 'send email failed.', 500)
+            }
             this._codeList.push({email, code})
             //remove code from list after 15 minutes
             setTimeout(() => {
@@ -426,6 +431,18 @@ class UserService extends BaseService {
             tags_obj_list.push(tag_obj[0])
         }
         await researcher.setTags(tags_obj_list)
+
+        const index = this._waitList.findIndex(obj => obj.email === user.email)
+        if(index !== -1) {
+            const waitInfo = this._waitList[index]
+            for (let research_id of waitInfo.researches) {
+                const research = await Research.findByPk(research_id)
+                if(research) {
+                    await research.addResearcher(researcher)
+                }
+            }
+            this._waitList.splice(index, 1)
+        }
 
         return researcher
     }
