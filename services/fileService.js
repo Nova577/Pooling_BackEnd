@@ -1,6 +1,6 @@
 import BaseService from './baseService.js'
 import bcrypt from 'bcrypt'
-import { HttpError } from '../utils/httpError.js'
+import { HttpError } from '../utils/error.js'
 import { Picture, Document } from '../models/file.js'
 
 class FileService extends BaseService {

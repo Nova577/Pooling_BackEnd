@@ -4,6 +4,7 @@ import config from './utils/config.js'
 import logger from './utils/logger.js'
 import expressLoader from './loaders/express.js'
 import databaseLoader from './loaders/database.js'
+import messagerLoader from './loaders/messager.js'
 
 async function startService() {
     const app = express()
@@ -17,6 +18,12 @@ async function startService() {
         await databaseLoader()
     }catch(error) {
         logger.error('init database failed:', error)
+        return
+    }
+    try {
+        await messagerLoader()
+    }catch(error) {
+        logger.error('init messager failed:', error)
         return
     }
     

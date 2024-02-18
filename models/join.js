@@ -6,7 +6,7 @@ import { Document, Picture } from './file.js'
 
 const cooperationGroupSchema = {
     role: {
-        //0: creator, 1: cooperater
+        //0: creator, 1: cooperator, 2: participant
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -14,7 +14,7 @@ const cooperationGroupSchema = {
         //0: pending, 1: accepted, 2: rejected
         type: DataTypes.STRING,
         defaultvalue: '0',
-        allowNull: false
+        allowNull: true
     }
 }
 
@@ -27,8 +27,6 @@ const researcherTagSchema = {}
 const researchDocumentSchema = {}
 
 const researchPictureSchema = {}
-
-const participantResearchSchema = {}
 
 const eassayAnswerSchema = {
     answer: {
@@ -68,10 +66,6 @@ function joinInit(sequelize) {
     const ResearchPicture = sequelize.define('ResearchPicture', researchPictureSchema)
     Research.belongsToMany(Picture, { through: ResearchPicture })
     Picture.belongsToMany(Research, { through: ResearchPicture })
-
-    const ParticipantResearch = sequelize.define('ParticipantResearch', participantResearchSchema)
-    Participant.belongsToMany(Research, { through: ParticipantResearch })
-    Research.belongsToMany(Participant, { through: ParticipantResearch })
 
     const EassyAnswer = sequelize.define('EassyAnswer', eassayAnswerSchema)
     Participant.belongsToMany(EassyQuestion, { through: EassyAnswer })

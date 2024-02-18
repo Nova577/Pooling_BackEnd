@@ -436,12 +436,13 @@ class UserService extends BaseService {
         if(index !== -1) {
             const waitInfo = this._waitList[index]
             for (let research_id of waitInfo.researches) {
-                const research = await Research.findByPk(research_id)
-                if(research) {
-                    await research.addResearcher(researcher)
+                const research_obj = await Research.findByPk(research_id)
+                if(research_obj) {
+                    await research_obj.addUser(user.id, {through: {role: '1'}})
                 }
             }
             this._waitList.splice(index, 1)
+            //TODO: send message through websocket message service
         }
 
         return researcher

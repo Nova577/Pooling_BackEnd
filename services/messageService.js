@@ -1,3 +1,4 @@
+import logger from '../utils/logger.js'
 import BaseService from './baseService.js'
 import nodemailer from 'nodemailer'
 
@@ -27,15 +28,16 @@ class MessageService extends BaseService {
         })
         this._transporter.verify(function (error, success) {
             if (error) {
-                console.log(error)
+                logger.error(error)
             } else {
-                console.log('Server is ready to take our messages:', success)
+                logger.info('Server is ready to take our messages:', success)
             }
         })
+        //TODO: init websocket service
     }
 
     async sendEmail(from, to, subject, text) {
-        if(!to || !subject || !text) {
+        if(!from || !to || !subject || !text) {
             throw new Error('InvalidInputError')
         }
 
@@ -47,5 +49,12 @@ class MessageService extends BaseService {
         })
         return info
     }
+
+    async sendMessage(from, to, type, message) {
+        if(!from || !to || !type || !message){
+            throw new Error('InvalidInputError')
+        }
+        // TODO:send message by websocket service
+    }
 } 
-export default MessageService
+export default MessageService.getInstance()

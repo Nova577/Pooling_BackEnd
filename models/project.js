@@ -29,19 +29,11 @@ const researchSchema = {
     },
     appointment_id: {
         type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-            model: Appointment,
-            key: 'id'
-        }
+        allowNull: true
     },
     questionnaire_id: {
         type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-            model: Questionnaire,
-            key: 'id'
-        }
+        allowNull: true
     }
 }
 
@@ -129,11 +121,7 @@ const eassyQuestionSchema = {
     },
     questionnaire_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-            model: Questionnaire,
-            key: 'id'
-        }
+        allowNull: false
     }
 }
 
@@ -161,11 +149,7 @@ const choiceQuestionSchema = {
     },
     questionnaire_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-            model: Questionnaire,
-            key: 'id'
-        }
+        allowNull: false
     }
 }
 class Research extends Model {

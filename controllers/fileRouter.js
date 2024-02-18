@@ -26,5 +26,5 @@ fileRouter.get('/:id', async ( request, response, next ) => {
     }
 })
 
-
+export default fileRouter
 

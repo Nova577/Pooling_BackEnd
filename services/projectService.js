@@ -36,7 +36,7 @@ class ProjectService extends BaseService {
         }
 
         const { name, reward, headCount, description, status, appointment_id, questionnarie_id } = researchInfo
-        const research = await Research.create({
+        const research_obj = await Research.create({
             name,
             reward,
             headCount,
@@ -45,14 +45,14 @@ class ProjectService extends BaseService {
             appointment_id,
             questionnarie_id
         })
-        if(!research) {
+        if(!research_obj) {
             throw new HttpError('SystemError', 'Create research failed.', 500)
         }
 
         const {picture_id, documents, cooperators, creator, preference} = researchInfo
-        await research.setPicture(picture_id)
+        await research_obj.setPicture(picture_id)
         const documents_id = documents.map(document => document.id)
-        await research.setDocuments(documents_id)
+        await research_obj.setDocuments(documents_id)
 
         cooperators.map(async cooperator => {
             const user = await User.findOne({where: {email: cooperator}})
@@ -62,17 +62,18 @@ class ProjectService extends BaseService {
                 if(!sendInfo.messageId) {
                     //TODO: log error and send message
                 }
-                userService.addToWaitList(cooperator, research.id)
+                userService.addToWaitList(cooperator, research_obj.id)
             } else {
-                await research.addUser(user, {through: {role: 'coopreator'}})
+                //TODO:send message through websocket message service
+                await research_obj.addUser(user, {through: {role: '1'}})
             }
         })
-        await research.addUser(creator, {through: {role: 'creator'}})
+        await research_obj.addUser(creator, {through: {role: '0'}})
 
         const tags = preference.map(async tag => await Tag.findCreateFind({where: {name: tag}}))
-        research.setTags(tags)
+        research_obj.setTags(tags)
 
-        return research.id
+        return research_obj.id
     }
 
     async getResearchInfo(id) {
@@ -80,25 +81,23 @@ class ProjectService extends BaseService {
             throw new HttpError('InvalidInputError', 'id is required.', 400)
         }
 
-        const research = await Research.findByPk(id)
-        if(!research) {
+        const research_obj = await Research.findByPk(id)
+        if(!research_obj) {
             throw new HttpError('NotFound', 'research not found.', 404)
         }
 
-        const { name, reward, headCount, description, status } = research
-        const picture_obj = await research.getPicture()
+        const { name, reward, headCount, description, status } = research_obj
+        const picture_obj = await research_obj.getPicture()
         const picture_id = picture_obj.id
-        const appointment_obj = await research.getAppointment()
-        const appointment_id = appointment_obj.id
-        const questionnarie_obj = await research.getQuestionnarie()
-        const questionnarie_id = questionnarie_obj.id
-        const documents_obj = await research.getDocuments()
+        const appointment_id = research_obj.appointment_id
+        const questionnarie_id = research_obj.questionnaire_id
+        const documents_obj = await research_obj.getDocuments()
         const documents = documents_obj.map(document => {
             return {id: document.id, name: document.name}
         })
-        const cooperators_obj = await research.getUsers()
+        const cooperators_obj = await research_obj.getUsers({through: {where: {role: '1'}}})
         const cooperators= cooperators_obj.map(user => user.email)
-        const preference_obj = await research.getTags()
+        const preference_obj = await research_obj.getTags()
         const preference = preference_obj.map(tag => tag.name)
 
         return {
@@ -125,29 +124,29 @@ class ProjectService extends BaseService {
             throw new HttpError('PermissionDenied', 'You have no permission to update this research.', 403)
         }
 
-        const research = await Research.findByPk(id)
-        if(!research) {
+        const research_obj = await Research.findByPk(id)
+        if(!research_obj) {
             throw new HttpError('NotFound', 'research not found.', 404)
         }
 
         const { name, reward, headCount, description, status, appointment_id, questionnarie_id } = researchInfo
-        research.name = name
-        research.reward = reward
-        research.headCount = headCount
-        research.description = description
-        research.status = status
-        research.appointment_id = appointment_id
-        research.questionnarie_id = questionnarie_id
+        research_obj.name = name
+        research_obj.reward = reward
+        research_obj.headCount = headCount
+        research_obj.description = description
+        research_obj.status = status
+        research_obj.appointment_id = appointment_id
+        research_obj.questionnarie_id = questionnarie_id
 
         const {picture_id, documents, cooperators, preference} = researchInfo
-        await research.setPicture(picture_id)
+        await research_obj.setPicture(picture_id)
         const documents_id = documents.map(document => document.id)
-        await research.setDocuments(documents_id)
+        await research_obj.setDocuments(documents_id)
 
-        const old_cooperaters_obj = research.getUsers()
-        old_cooperaters_obj.map(async cooperator => {
+        const old_cooperators_obj = research_obj.getUsers({through: {where: {role: '1'}}})
+        old_cooperators_obj.map(async cooperator => {
             if(!cooperators.includes(cooperator.email)) {
-                await research.removeUser(cooperator)
+                await research_obj.removeUser(cooperator)
             } else {
                 cooperators.splice(cooperators.indexOf(cooperator.email), 1)
             }
@@ -160,16 +159,17 @@ class ProjectService extends BaseService {
                 if(!sendInfo.messageId) {
                     //TODO: log error and send message
                 }
-                userService.addToWaitList(cooperator, research.id)
+                userService.addToWaitList(cooperator, research_obj.id)
             } else {
-                await research.addUser(user, {through: {role: 'coopreator'}})
+                //TODO:send message through websocket message service
+                await research_obj.addUser(user, {through: {role: '1'}})
             }
         })
 
         const tags = preference.map(async tag => await Tag.findCreateFind({where: {name: tag}}))
-        await research.setTags(tags)
+        await research_obj.setTags(tags)
 
-        return await research.save()
+        return await research_obj.save()
     }
 
     async createAppointment(appointmentInfo) {
@@ -179,7 +179,7 @@ class ProjectService extends BaseService {
 
         const { name, timeInfo, meetingInfo, description } = appointmentInfo
         const { date, startTime, endTime } = timeInfo
-        const appointment = await Appointment.create({
+        const appointment_obj = await Appointment.create({
             name,
             date,
             startTime,
@@ -187,11 +187,11 @@ class ProjectService extends BaseService {
             meetingInfo,
             description
         })
-        if(!appointment) {
+        if(!appointment_obj) {
             throw new HttpError('SystemError', 'Create appointment failed.', 500)
         }
 
-        return appointment.id
+        return appointment_obj.id
     }
 
     async getAppointmentInfo(id) {
@@ -199,12 +199,12 @@ class ProjectService extends BaseService {
             throw new HttpError('InvalidInputError', 'id is required.', 400)
         }
 
-        const appointment = await Appointment.findByPk(id)
-        if(!appointment) {
+        const appointment_obj = await Appointment.findByPk(id)
+        if(!appointment_obj) {
             throw new HttpError('NotFound', 'appointment not found.', 404)
         }
 
-        const { name, date, startTime, endTime, meetingInfo, description } = appointment
+        const { name, date, startTime, endTime, meetingInfo, description } = appointment_obj
 
         return {
             name,
@@ -226,21 +226,21 @@ class ProjectService extends BaseService {
             throw new HttpError('PermissionDenied', 'You have no permission to update this appointment.', 403)
         }
 
-        const appointment = await Appointment.findByPk(id)
-        if(!appointment) {
+        const appointment_obj = await Appointment.findByPk(id)
+        if(!appointment_obj) {
             throw new HttpError('NotFound', 'appointment not found.', 404)
         }
 
         const { name, timeInfo, meetingInfo, description } = appointmentInfo
         const { date, startTime, endTime } = timeInfo
-        appointment.name = name
-        appointment.date = date
-        appointment.startTime = startTime
-        appointment.endTime = endTime
-        appointment.meetingInfo = meetingInfo
-        appointment.description = description
+        appointment_obj.name = name
+        appointment_obj.date = date
+        appointment_obj.startTime = startTime
+        appointment_obj.endTime = endTime
+        appointment_obj.meetingInfo = meetingInfo
+        appointment_obj.description = description
 
-        return await appointment.save()
+        return await appointment_obj.save()
     }
 
     async createQuestionnaire(questionnaireInfo) {
@@ -250,7 +250,7 @@ class ProjectService extends BaseService {
 
         const { name, timeInfo, description, eassayQuestions, choiceQuestions } = questionnaireInfo
         const { dueDate, dueTime, timeLimit } = timeInfo
-        const questionnaire = await Questionnaire.create({
+        const questionnaire_obj = await Questionnaire.create({
             name,
             dueDate, 
             dueTime, 
@@ -259,7 +259,7 @@ class ProjectService extends BaseService {
             essayNumber: eassayQuestions.length,
             choiceNumber: choiceQuestions.length
         })
-        if(!questionnaire) {
+        if(!questionnaire_obj) {
             throw new HttpError('SystemError', 'Create questionnaire failed.', 500)
         }
         
@@ -267,7 +267,7 @@ class ProjectService extends BaseService {
             await EassyQuestion.create({
                 question: eassayQuestion.question,
                 number: eassayQuestion.number,
-                questionnaire_id: questionnaire.id
+                questionnaire_id: questionnaire_obj.id
             })
         })
         choiceQuestions.map(async choiceQuestion => {
@@ -276,11 +276,11 @@ class ProjectService extends BaseService {
                 number: choiceQuestion.number,
                 options: choiceQuestion.options.join(','),
                 choice: choiceQuestion.choice,
-                questionnaire_id: questionnaire.id
+                questionnaire_id: questionnaire_obj.id
             })
         })
 
-        return questionnaire.id
+        return questionnaire_obj.id
     }
 
     async getQuestionnaireInfo(id) { 
@@ -288,8 +288,8 @@ class ProjectService extends BaseService {
             throw new HttpError('InvalidInputError', 'id is required.', 400)
         }
 
-        const questionnaire = await Questionnaire.findByPk(id)
-        if(!questionnaire) {
+        const questionnaire_obj = await Questionnaire.findByPk(id)
+        if(!questionnaire_obj) {
             throw new HttpError('NotFound', 'questionnaire not found.', 404)
         }
 
@@ -310,7 +310,7 @@ class ProjectService extends BaseService {
             }
         })
 
-        const { name, dueDate, dueTime, timeLimit, description } = questionnaire
+        const { name, dueDate, dueTime, timeLimit, description } = questionnaire_obj
 
         return {
             name,
@@ -333,18 +333,18 @@ class ProjectService extends BaseService {
             throw new HttpError('PermissionDenied', 'You have no permission to update this questionnaire.', 403)
         }
 
-        const questionnaire = await Questionnaire.findByPk(id)
-        if(!questionnaire) {
+        const questionnaire_obj = await Questionnaire.findByPk(id)
+        if(!questionnaire_obj) {
             throw new HttpError('NotFound', 'questionnaire not found.', 404)
         }
 
         const { name, timeInfo, description } = questionnaireInfo
         const { dueDate, dueTime, timeLimit } = timeInfo
-        questionnaire.name = name
-        questionnaire.dueDate = dueDate
-        questionnaire.dueTime = dueTime
-        questionnaire.timeLimit = timeLimit
-        questionnaire.description = description
+        questionnaire_obj.name = name
+        questionnaire_obj.dueDate = dueDate
+        questionnaire_obj.dueTime = dueTime
+        questionnaire_obj.timeLimit = timeLimit
+        questionnaire_obj.description = description
 
         const eassayQuestions_obj = await EassyQuestion.findAll({where: {questionnaire_id: id}})
         eassayQuestions_obj.map(async eassayQuestion => await eassayQuestion.destroy())
@@ -357,7 +357,7 @@ class ProjectService extends BaseService {
                 {where: {
                     question: eassayQuestion.question,
                     number: eassayQuestion.number,
-                    questionnaire_id: questionnaire.id
+                    questionnaire_id: questionnaire_obj.id
                 }}
             )
         })
@@ -368,12 +368,12 @@ class ProjectService extends BaseService {
                     number: choiceQuestion.number,
                     options: choiceQuestion.options.join(','),
                     choice: choiceQuestion.choice,
-                    questionnaire_id: questionnaire.id
+                    questionnaire_id: questionnaire_obj.id
                 }}
             )
         })
 
-        return questionnaire.save()
+        return questionnaire_obj.save()
     }
 
     async uploadQuestionnaireAnswer(id, answer, operator) {
@@ -381,8 +381,8 @@ class ProjectService extends BaseService {
             throw new HttpError('InvalidInputError', 'id and answer are required.', 400)
         }
 
-        const participant = await Participant.findOne({where: {user_id: operator}})
-        if(!participant) {
+        const participant_obj = await Participant.findOne({where: {user_id: operator}})
+        if(!participant_obj) {
             throw new HttpError('NotFound', 'participant not found.', 404)
         }
 
@@ -390,7 +390,7 @@ class ProjectService extends BaseService {
         if(!research_obj) {
             throw new HttpError('NotFound', 'research not found.', 404)
         }
-        if(!participant.hasResearch(research_obj)) {
+        if(!participant_obj.hasResearch(research_obj)) {
             throw new HttpError('PermissionDenied', 'You have no permission to upload answer to this questionnaire.', 403)
         }
 
@@ -399,12 +399,12 @@ class ProjectService extends BaseService {
         const choiceQuestions_obj = await ChoiceQuestion.findAll({ where: { questionnaire_id: id }})
         eassayAnswers.map(async eassayAnswer => {
             const eassayQuestion = eassayQuestions_obj.find(eassayQuestion => eassayQuestion.number === eassayAnswer.number)
-            participant.setEassyQuestion(eassayQuestion, { through: { answer: eassayAnswer.answer }})
+            participant_obj.setEassyQuestion(eassayQuestion, { through: { answer: eassayAnswer.answer }})
         })
         choiceAnswers.map(async choiceAnswer => {
             const choiceQuestion = choiceQuestions_obj.find(choiceQuestion => choiceQuestion.number === choiceAnswer.number)
             const answer = choiceAnswer.answer.join(',')
-            participant.setChoiceQuestion(choiceQuestion, { through: { answer }})
+            participant_obj.setChoiceQuestion(choiceQuestion, { through: { answer }})
         })
 
         return true
@@ -415,9 +415,9 @@ class ProjectService extends BaseService {
             throw new HttpError('InvalidInputError', 'operator is required.', 400)
         }
         const researches_obj = await Research.findAndCountAll({where: {status: 'in progress'}})
-        const participant_obj = await Participant.findByPk(operator)
+        const user = await User.findByPk(operator)
         //should be optimized
-        const researches_feed = researches_obj.rows.filter(research => !participant_obj.hasResearch(research))
+        const researches_feed = researches_obj.rows.filter(research => !user.hasResearch(research))
 
         return researches_feed
     }
@@ -437,7 +437,7 @@ class ProjectService extends BaseService {
         if(research_obj.headCount <= research_obj.getParticipants().length) {
             throw new HttpError('PermissionDenied', 'The research is full.', 403)
         }
-        research_obj.addParticipant(user)
+        research_obj.addUser(user, {through: {role: '2'}})
 
         return true
     }
