@@ -18,13 +18,10 @@ class MessageService extends BaseService {
     init(config) {
         super.init(config)
         this._transporter = nodemailer.createTransport({
-            host: this._config.host,
-            port: this._config.port,
-            secure: true,
-            auth: {
-                user: this._config.user,
-                pass: this._config.pass
-            }
+            host: config.host,
+            port: config.port,
+            secure: config.secure,
+            auth: config.auth
         })
         this._transporter.verify(function (error, success) {
             if (error) {
@@ -56,5 +53,5 @@ class MessageService extends BaseService {
         }
         // TODO:send message by websocket service
     }
-} 
+}
 export default MessageService.getInstance()

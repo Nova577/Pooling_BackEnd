@@ -66,6 +66,7 @@ class ProjectService extends BaseService {
             } else {
                 //TODO:send message through websocket message service
                 await research_obj.addUser(user, {through: {role: '1'}})
+                //sendMessage()....
             }
         })
         await research_obj.addUser(creator, {through: {role: '0'}})

@@ -49,7 +49,7 @@ class UserService extends BaseService {
         if (!(user && passwordCorrect)) {
             throw new HttpError('InvalidInputError', 'invalid username or password.', 401)
         }
-    
+
         const userForToken = {
             id: user.id,
             email : user.email,
@@ -219,7 +219,7 @@ class UserService extends BaseService {
     /**
      * @description: create user by type
      * @param {*} userInfo
-     * @param {*} type 0:participant, 1: researcher
+     * @param {*} type 0: participant, 1: researcher
      * @return {*}
      */
     async createUser(userInfo, type) {
@@ -260,7 +260,7 @@ class UserService extends BaseService {
             throw new HttpError('SystemError', 'create user failed.', 500)
         }
         
-        if (type === 0) {
+        if (type === '0') {
             const { section, occupation, tags } = userInfo
             const participant = await this._createParticipant(
                 { user, section, occupation, tags }
@@ -269,7 +269,7 @@ class UserService extends BaseService {
                 User.destroy({ where: { id: user.id }, force: true})
                 throw new HttpError('SystemError', 'create user failed.', 500)
             }
-        } else if (type === 1) {
+        } else if (type === '1') {
             const { institute, title, relatedLinks, tags } = userInfo
             const researcher = await this._createResearcher(
                 { user, institute, title, relatedLinks, tags }

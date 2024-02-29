@@ -34,6 +34,7 @@ class DataService extends BaseService {
             )
         }
         //init other type of database...
+        //redis, sqlite, mongodb
     }
 
     /**

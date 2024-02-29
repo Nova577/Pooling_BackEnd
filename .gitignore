@@ -17,3 +17,6 @@
 
 #log
 /log
+
+#other
+/services/webSocketService.js

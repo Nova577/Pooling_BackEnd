@@ -16,22 +16,19 @@ const DATABASE = {
     }
 }
 
-const DATABASE_MYSQL_NAME = 'mysql'
-const DATABASE_MYSQL_USERNAME = 'root'
-const DATABASE_MYSQL_PASSWORD = 'poolingtest'
-const DATABASE_MYSQL_OPTIONS = {
-    host : 'localhost',
-    dialect : 'mysql',
-    logging: true,
-    timezone: '+08:00'
+const MAIL = {
+    host: 'mail.pooling.tools',
+    port: 8888,
+    secure: true,
+    auth: {
+        user: 'Authenticator',
+        pass: '123456'
+    }
 }
 
 export default {
     ENV,
     PORT,
     DATABASE,
-    DATABASE_MYSQL_NAME,
-    DATABASE_MYSQL_USERNAME,
-    DATABASE_MYSQL_PASSWORD,
-    DATABASE_MYSQL_OPTIONS
+    MAIL
 }
