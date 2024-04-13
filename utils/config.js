@@ -5,11 +5,11 @@ const ENV = process.env.NODE_ENV
 const PORT = process.env.PORT
 
 const DATABASE = {
-    name: 'mysql',
-    username: 'root',
-    password: 'poolingtest',
+    name: process.env.NAME,
+    username: process.env.USER_NAME,
+    password: process.env.PASSWORD,
     options: {
-        host : 'localhost',
+        host : process.env.HOST,
         dialect : 'mysql',
         logging: true,
         timezone: '+08:00'

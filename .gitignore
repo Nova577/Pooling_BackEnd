@@ -16,7 +16,7 @@
 .vscode
 
 #log
-/log
+/logs
 
 #other
 /services/webSocketService.js
