@@ -605,6 +605,59 @@ class UserService extends BaseService {
         
         return true
     }
+
+    async searchDictionary(layerOne) {
+        let results = []
+        switch(layerOne) {
+        case 'Country':{
+            const countries = await Country.findAll()
+            const states = await State.findAll()
+            results = countries.map( async country => {
+                const target_states = states.filter(state => {
+                    state.country_id == country.id
+                })
+                const state_names = target_states(state => {
+                    return state.name
+                })
+                results.push({
+                    [country.name] : state_names
+                })
+            })
+            break
+        }
+        case 'Section': {
+            const sections = await Section.findAll()
+            results = sections.map(section => {
+                return  section.name
+            })
+        }
+            break
+        case 'Occupation': {
+            const occupations = await Occupation.findAll()
+            results = occupations.map(occupation => {
+                return occupation.name
+            })
+            break
+        }
+        case 'Institute':{
+            const institutes = await Institute.findAll()
+            results = institutes.map(institute => {
+                return institute.name
+            })
+            break
+        }
+        case 'Title': {
+            const titles = await Title.findAll()
+            results = titles.map(title => {
+                return title.name
+            })
+            break
+        }
+        default:
+            break
+        }
+        return results
+    }
 }
 
 

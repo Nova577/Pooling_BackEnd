@@ -147,6 +147,10 @@ PUT http://localhost:3003/api/researcher/2ad1f6ac-66cf-4848-a407-daebfbcdc0f6
   "description": "I am a good person"
 }
 
+### Get dictionary
+GET http://localhost:3003/api/dictionary/Country
+
+
 ### Create Research
 POST http://localhost:3003/api/research
 

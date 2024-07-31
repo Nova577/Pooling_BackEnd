@@ -9,6 +9,7 @@ import projectRouter from '../controllers/projectRouter.js'
 import userRouter from '../controllers/userRouter.js'
 import fileRouter from '../controllers/fileRouter.js'
 import resetRouter from '../controllers/resetRouter.js'
+import dictionaryRouter from '../controllers/dictionaryRouter.js'
 import fileUpload from 'express-fileupload'
 
 
@@ -27,8 +28,7 @@ export default (app) => {
     app.use('/api/auth', middleware.tokenExtractor, authRouter)
     app.use('/api/project', middleware.tokenExtractor, middleware.userExtractor, projectRouter)
     app.use('/api/file', middleware.tokenExtractor, middleware.userExtractor, fileRouter)
-    
-    
+    app.use('/api/dictionary', dictionaryRouter)
 
     //error handle
     app.use(middleware.errorHandler)
